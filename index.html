@@ -1,0 +1,979 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="LNA Ziel">
+<meta name="theme-color" content="#0f1419">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-180.png">
+<title>LNA Zielklinik</title>
+<style>
+:root{
+  --bg:#0b1016;--card:#151c25;--card2:#1e2833;--line:#2a3542;--txt:#eef2f6;--mut:#8f9cab;
+  --acc:#ffd200;--red:#ff4d42;--grn:#34d27b;--blu:#4ea8ff;--org:#ff9f1a;--pur:#b58cff;
+  --sat:env(safe-area-inset-top);--sab:env(safe-area-inset-bottom);--hh:120px;--tabh:60px;
+  --shadow:0 1px 0 rgba(255,255,255,.03) inset,0 6px 18px rgba(0,0,0,.25);
+}
+@media (prefers-color-scheme: light){
+  :root{--bg:#eef1f5;--card:#fff;--card2:#f1f4f8;--line:#d8dee6;--txt:#0f1720;--mut:#5a6775;--acc:#e0b400;
+        --shadow:0 1px 2px rgba(15,23,32,.06),0 6px 18px rgba(15,23,32,.06)}
+  html .tag.cap,html .tag.est{color:#7a5a00;border-color:#b38900;opacity:1}
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;background:var(--bg);color:var(--txt);font:16px/1.35 -apple-system,BlinkMacSystemFont,"SF Pro Text",system-ui,sans-serif;-webkit-text-size-adjust:100%}
+body{touch-action:manipulation;overscroll-behavior-y:none}
+button{-webkit-user-select:none;user-select:none;cursor:pointer}
+header{position:sticky;top:0;z-index:30;background:var(--bg);background:color-mix(in srgb,var(--bg) 82%,transparent);-webkit-backdrop-filter:saturate(170%) blur(16px);backdrop-filter:saturate(170%) blur(16px);padding:calc(var(--sat) + 8px) 12px 9px;border-bottom:1px solid var(--line)}
+.dot{width:10px;height:10px;border-radius:50%;background:var(--mut);flex:none;box-shadow:0 0 0 3px rgba(143,156,171,.25);box-shadow:0 0 0 3px color-mix(in srgb,var(--mut) 25%,transparent)}
+.dot.ok{background:var(--grn);box-shadow:0 0 0 3px rgba(52,210,123,.25);box-shadow:0 0 0 3px color-mix(in srgb,var(--grn) 25%,transparent)}
+.dot.bad{background:var(--red);box-shadow:0 0 0 3px rgba(255,77,66,.3);box-shadow:0 0 0 3px color-mix(in srgb,var(--red) 30%,transparent)}
+.btn:active,.chip:active,.q:active,.ctr button:active,.tabs button:active,.mbtn:active{transform:scale(.96)}
+.btn,.chip,.q,.ctr button,.mbtn{transition:transform .08s}
+details.help{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:0 12px;margin-bottom:10px}
+details.help summary{padding:10px 0;font-size:14px;color:var(--mut);list-style:none;display:flex;justify-content:space-between}
+details.help summary::after{content:"▾"}details.help[open] summary::after{content:"▴"}
+details.help summary::-webkit-details-marker{display:none}
+details.help>div{padding-bottom:10px}
+.quick{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px;margin-bottom:10px}
+.q{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:9px 8px;text-align:left;box-shadow:var(--shadow);display:flex;flex-direction:column;gap:2px;min-height:78px}
+.q small{font-size:11px;color:var(--mut);line-height:1.15}
+.q b{font-size:14px;line-height:1.15;overflow:hidden;text-overflow:ellipsis;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.q span{font-size:17px;font-weight:750;font-variant-numeric:tabular-nums;margin-top:auto}
+.q.tsht{border-color:var(--blu)}.q.tbig{border-color:var(--org)}.q.tshtp{border:1px dashed var(--blu)}
+.card.flash{animation:fl 1.2s}@keyframes fl{0%,40%{box-shadow:0 0 0 3px var(--acc)}100%{box-shadow:var(--shadow)}}
+.card{scroll-margin-top:calc(var(--hh) + 10px)}
+.row{display:flex;gap:8px;align-items:center}
+.loc{flex:1;min-width:0;display:flex;gap:10px;align-items:center}.loc>span{min-width:0;flex:1}
+.loc b{display:block;font-size:16px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.loc small{color:var(--mut);font-size:12px}
+button,select,input{font:inherit;color:inherit}
+.btn{background:var(--card2);border:1px solid var(--line);border-radius:12px;padding:9px 13px;min-height:44px;font-weight:550}
+.btn.pri{background:var(--acc);color:#111;border-color:var(--acc);font-weight:600}
+.btn.sm{min-height:40px;padding:6px 10px;font-size:14px;border-radius:11px}
+select,input{background:var(--card2);border:1px solid var(--line);border-radius:12px;padding:8px 11px;min-height:44px;width:100%;font-size:16px}
+main{padding:12px 12px calc(var(--tabh) + 24px + var(--sab))}
+.tabs{position:fixed;bottom:0;left:0;right:0;z-index:40;display:flex;background:var(--card);background:color-mix(in srgb,var(--card) 88%,transparent);-webkit-backdrop-filter:saturate(170%) blur(16px);backdrop-filter:saturate(170%) blur(16px);border-top:1px solid var(--line);padding-bottom:var(--sab);height:calc(var(--tabh) + var(--sab))}
+.tabs button{flex:1;background:none;border:0;padding:6px 2px 8px;font-size:11px;color:var(--mut);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px}
+.tabs button span{font-size:20px;line-height:1;padding:3px 14px;border-radius:14px}
+.tabs button.on{color:var(--txt);font-weight:650}
+.tabs button.on span{background:rgba(255,210,0,.26);background:color-mix(in srgb,var(--acc) 26%,transparent)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:12px 13px;margin-bottom:10px;box-shadow:var(--shadow)}
+.hname{font-weight:700;font-size:16.5px;line-height:1.25}
+.meta{color:var(--mut);font-size:13px}
+.times{display:flex;gap:6px;margin:8px 0 6px}
+.t{flex:1;background:var(--card2);border-radius:12px;padding:7px 6px;text-align:center;min-width:0}
+.t .v{font-size:21px;font-weight:750;font-variant-numeric:tabular-nums;white-space:nowrap}
+.t .l{font-size:11px;color:var(--mut)}
+.t.best{outline:2px solid var(--grn)}
+.tags{display:flex;flex-wrap:wrap;gap:4px;margin-top:4px}
+.tag{font-size:11px;padding:2px 7px;border-radius:20px;border:1px solid var(--line);color:var(--mut)}
+.tag.sht{border-color:var(--blu);color:var(--blu)}.tag.vb{border-color:var(--org);color:var(--org)}
+.tag.hbo{border-color:var(--pur);color:var(--pur)}.tag.kid{border-color:var(--grn);color:var(--grn)}
+.tag.cap{border-color:var(--acc);color:var(--acc)}.tag.est{border:1px dashed var(--acc);color:var(--acc);opacity:.85}.tag.warn{border-color:var(--red);color:var(--red)}
+.acts{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+.acts a,.acts button{flex:1;text-align:center;text-decoration:none;color:var(--txt)}
+h2{font-size:18px;margin:6px 0 8px}
+h3{font-size:15px;margin:14px 0 6px;color:var(--mut);text-transform:uppercase;letter-spacing:.04em}
+.note{background:var(--card2);border-left:3px solid var(--acc);padding:8px 10px;border-radius:8px;font-size:14px;margin-bottom:9px}
+.note.red{border-color:var(--red)}
+a.tel{display:block;background:var(--card2);border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin:6px 0;color:var(--txt);text-decoration:none}
+a.tel b{color:var(--grn)}
+.filters{display:flex;gap:6px;overflow-x:auto;margin:0 -12px 10px;padding:0 12px;scrollbar-width:none;-webkit-overflow-scrolling:touch}.filters::-webkit-scrollbar{display:none}
+.chip{white-space:nowrap;border:1px solid var(--line);background:var(--card);border-radius:20px;padding:8px 14px;font-size:14px;min-height:38px}
+.chip.on{background:var(--acc);color:#111;border-color:var(--acc);font-weight:600}
+.mrow{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:6px 10px;align-items:center;padding:8px 0;border-bottom:1px solid var(--line)}
+.mrow>div:first-child{grid-column:1/3}
+.ctr{justify-content:space-between}
+.ctr{display:flex;align-items:center;gap:4px}
+.ctr button{flex:0 0 auto;width:44px;height:40px;border-radius:9px;border:1px solid var(--line);background:var(--card2);font-size:18px;font-weight:700}
+@media (max-width:350px){.ctr button{width:38px}}
+.ctr .n{min-width:34px;flex:1;text-align:center;font-weight:700;font-variant-numeric:tabular-nums}
+.ctr.s .n{color:var(--red)}.ctr.l .n{color:var(--grn)}
+.over{color:var(--red)!important}.near{color:var(--org)!important}
+.log{font:13px ui-monospace,Menlo,monospace;white-space:pre-wrap;background:var(--card2);padding:8px;border-radius:8px;max-height:260px;overflow:auto}
+.hidden{display:none!important}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+label.f{display:block;font-size:13px;color:var(--mut);margin-top:6px}
+.sumbar{display:flex;gap:8px;margin-bottom:10px}
+.sumbar div{flex:1;background:var(--card);border:1px solid var(--line);border-radius:12px;text-align:center;padding:8px}
+.sumbar b{display:block;font-size:24px}
+.card.tsht{border:2px solid var(--blu);border-left-width:8px;background:linear-gradient(135deg,rgba(78,168,255,.22),var(--card) 70%)}
+.card.tshtp{border:2px dashed var(--blu);border-left-width:8px;background:linear-gradient(135deg,rgba(78,168,255,.12),var(--card) 70%)}
+.mrow.tshtp{border-left:5px dashed var(--blu);padding-left:8px;background:rgba(74,163,255,.04)}
+.tag.shtp{border:1px dashed var(--blu);color:var(--blu)}
+.card.tbig{border:2px solid var(--org);border-left-width:8px;background:linear-gradient(135deg,rgba(255,159,26,.20),var(--card) 70%)}
+.card.tsht .hname,.card.tshtp .hname,.card.tbig .hname{font-size:18.5px}
+.card.tsmall{padding:10px 12px;box-shadow:none}
+.card.tsmall .hname{font-size:15.5px;font-weight:600;color:var(--txt);color:color-mix(in srgb,var(--txt) 85%,var(--mut))}
+.badge{display:inline-flex;align-items:center;gap:5px;font-size:11.5px;font-weight:800;letter-spacing:.03em;text-transform:uppercase;padding:3px 9px;border-radius:7px;margin-bottom:6px;color:#0b1016}
+.badge.tsht{background:var(--blu)}.badge.tbig{background:var(--org)}
+.badge.tshtp{background:transparent;color:var(--blu);border:1.5px dashed var(--blu)}
+.mrow .badge{font-size:10px;padding:2px 6px;margin:0 6px 0 0;vertical-align:2px}
+.mrow.tsht{border-left:5px solid var(--blu);padding-left:8px;background:rgba(74,163,255,.08)}
+.mrow.tbig{border-left:5px solid var(--org);padding-left:8px;background:rgba(255,159,26,.07)}
+.legend{display:flex;gap:4px 14px;flex-wrap:wrap;font-size:12px;color:var(--mut);margin-bottom:8px}
+.legend i{display:inline-block;width:12px;height:12px;border-radius:3px;vertical-align:-2px;margin-right:4px}
+.toast{position:fixed;left:50%;bottom:calc(90px + var(--sab));transform:translateX(-50%);background:#000c;color:#fff;padding:9px 14px;border-radius:20px;font-size:14px;z-index:50;opacity:0;transition:opacity .2s;pointer-events:none}
+.toast.on{opacity:1}
+.hint{background:rgba(78,168,255,.12);border-left:3px solid var(--blu);border-radius:8px;padding:6px 9px;font-size:13px;margin:4px 0}
+.ortbtn{flex:1;display:flex;gap:8px;align-items:center;text-align:left;min-width:0;color:var(--mut);font-weight:500}
+.ortbtn #ortBtnTxt{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ib{background:none;border:0;padding:0 2px;font-size:17px;vertical-align:1px;cursor:pointer;opacity:.8}
+.ibk{position:fixed;inset:0;z-index:70;background:rgba(0,0,0,.45);display:flex;align-items:flex-end}
+.ibox{background:var(--card);width:100%;max-height:82vh;overflow:auto;border-radius:20px 20px 0 0;padding:14px 15px calc(18px + env(safe-area-inset-bottom));box-shadow:0 -10px 30px rgba(0,0,0,.35)}
+.ibox .x{float:right;background:var(--card2);border:0;border-radius:50%;width:36px;height:36px;font-size:16px;color:var(--txt)}
+.ibox h4{margin:14px 0 6px;font-size:13px;text-transform:uppercase;letter-spacing:.04em;color:var(--mut)}
+.fa{list-style:none;margin:0;padding:0}.fa li{padding:5px 0 5px 26px;position:relative;border-bottom:1px solid var(--line);font-size:15px}
+.fa li:before{position:absolute;left:2px;top:4px;font-weight:800}
+.fa li.p:before{content:"✓";color:var(--grn)}.fa li.n:before{content:"✗";color:var(--red)}.fa li.w:before{content:"?";color:var(--org)}
+.osheet{position:fixed;inset:0;z-index:60;background:var(--bg);display:flex;flex-direction:column}
+.ohead{display:flex;gap:8px;padding:calc(var(--sat) + 10px) 12px 10px;border-bottom:1px solid var(--line);background:var(--bg)}
+.ohead input{flex:1;font-size:17px}
+.olist{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:0 0 calc(20px + var(--sab))}
+.olist h4{margin:0;padding:12px 16px 6px;font-size:12px;color:var(--mut);font-weight:600;position:sticky;top:0;background:var(--bg)}
+.orow{display:flex;align-items:center;gap:10px;width:100%;background:none;border:0;border-bottom:1px solid var(--line);padding:13px 16px;text-align:left;color:var(--txt);min-height:54px}
+.orow:active{background:var(--card2)}
+.orow b{font-size:16.5px;font-weight:600}.orow b mark{background:rgba(255,210,0,.45);background:color-mix(in srgb,var(--acc) 45%,transparent);color:inherit;border-radius:3px}
+.orow small{display:block;color:var(--mut);font-size:12.5px}
+.orow .km{margin-left:auto;color:var(--mut);font-size:13px;font-variant-numeric:tabular-nums;white-space:nowrap}
+.oempty{padding:24px 16px;color:var(--mut)}
+#v-karte{position:fixed;left:0;right:0;top:var(--hh);bottom:calc(var(--tabh) + var(--sab));z-index:5}
+#map{position:absolute;inset:0;overflow:hidden;touch-action:none;background:
+  linear-gradient(var(--line) 1px,transparent 1px) 0 0/64px 64px,linear-gradient(90deg,var(--line) 1px,transparent 1px) 0 0/64px 64px,var(--card2)}
+#tiles,#marks{position:absolute;inset:0}
+.tile{position:absolute;left:0;top:0;opacity:0;transition:opacity .2s;pointer-events:none;-webkit-user-drag:none}
+@media (prefers-color-scheme: dark){.tile{filter:brightness(.78) contrast(1.05) saturate(.85)}}
+.mk{position:absolute;left:0;top:0;transform:translate(-50%,-50%);display:flex;align-items:center;gap:4px;pointer-events:auto}
+.mk i{width:16px;height:16px;border-radius:50%;background:#7b8794;border:2.5px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.45);flex:none}
+.mk.tsht i{background:var(--blu)}.mk.tbig i{background:var(--org)}
+.mk.tsht i,.mk.tbig i,.mk.tshtp i{width:24px;height:24px;border-width:3px}
+.mk.tsht span,.mk.tbig span,.mk.tshtp span{font-size:13.5px;padding:3px 7px}
+.mk.tsht span{background:var(--blu);color:#0b1016}.mk.tbig span{background:var(--org);color:#0b1016}
+.mk.tsmall i{width:12px;height:12px;border-width:2px}.mk.tsmall span{font-size:11px;opacity:.85}
+.mk.tsht,.mk.tbig,.mk.tshtp{z-index:2}
+.mk.tsht,.mk.tbig,.mk.tshtp{--r:12px}.mk.tsmall{--r:6px}
+.mk.tshtp i{background:var(--card);border:2.5px dashed var(--blu)}
+.mk span{font-size:12px;font-weight:700;background:rgba(10,14,20,.82);color:#fff;padding:2px 6px;border-radius:7px;white-space:nowrap;transform:translateX(2px)}
+.mk.nolbl span{display:none}
+.mk.sel i{width:22px;height:22px;box-shadow:0 0 0 4px var(--acc)}
+.eo{position:absolute;left:0;top:0;width:22px;height:22px;margin:-11px 0 0 -11px;border-radius:50%;background:var(--red);border:3px solid #fff;box-shadow:0 0 0 0 rgba(255,77,66,.6);animation:pulse 1.8s infinite;pointer-events:none}
+@keyframes pulse{0%{box-shadow:0 0 0 0 rgba(255,77,66,.55)}100%{box-shadow:0 0 0 18px rgba(255,77,66,0)}}
+.mfil{position:absolute;top:10px;left:0;right:0;margin:0;z-index:3}
+.mfil .chip{box-shadow:var(--shadow)}
+.mctl{position:absolute;right:10px;top:62px;display:flex;flex-direction:column;gap:8px;z-index:3}
+.mbtn{width:46px;height:46px;border-radius:14px;border:1px solid var(--line);background:var(--card);color:var(--txt);font-size:22px;font-weight:700;box-shadow:var(--shadow)}
+.attr{position:absolute;right:6px;bottom:4px;font-size:10px;color:#333;background:rgba(255,255,255,.75);padding:1px 5px;border-radius:5px;z-index:2}
+.mnote{position:absolute;left:10px;right:66px;top:62px;font-size:12px;background:var(--card);border:1px solid var(--line);border-radius:10px;padding:6px 9px;z-index:3;box-shadow:var(--shadow)}
+.sheet{position:absolute;left:8px;right:8px;bottom:8px;z-index:4;background:var(--card);border:1px solid var(--line);border-radius:18px;padding:12px 13px;box-shadow:0 10px 30px rgba(0,0,0,.35);max-height:62%;overflow:auto}
+.sheet .x{float:right;background:var(--card2);border:0;border-radius:50%;width:34px;height:34px;font-size:16px;color:var(--txt)}
+body.mapmode{overflow:hidden}
+.stale{background:var(--red);color:#fff;border-radius:10px;padding:8px 10px;margin-top:7px;font-size:14px;font-weight:600;display:flex;gap:8px;align-items:center}
+.stale button{background:#fff;color:#000;border:0;border-radius:8px;padding:6px 10px;font-weight:700;margin-left:auto}
+.btn.off{background:var(--red);border-color:var(--red);color:#fff}
+#heliBtn{white-space:nowrap;flex:none}
+.t.na{opacity:.35}
+.t.warnbox{outline:2px dashed var(--red)}
+.zone{background:rgba(255,90,79,.12);border-left:3px solid var(--red);border-radius:8px;padding:6px 9px;font-size:13px;margin:4px 0}
+</style>
+</head>
+<body>
+<header>
+  <div class="row">
+    <div class="loc"><i class="dot" id="locDot"></i><span><b id="locName">Kein Standort</b><small id="locSub">GPS oder Ort wählen</small></span></div>
+    <button class="btn pri" id="gpsBtn">📍 GPS</button>
+  </div>
+  <div class="row" style="margin-top:7px">
+    <button class="btn ortbtn" id="ortBtn"><span>🔍</span><span id="ortBtnTxt">Ort suchen …</span></button>
+    <button class="btn" id="coordBtn" title="Koordinaten eingeben">⌖</button>
+    <button class="btn" id="heliBtn" title="Heli verfügbar?">🚁 an</button>
+  </div>
+  <div id="staleBox" class="stale hidden"></div>
+  <div class="row hidden" id="coordRow" style="margin-top:7px">
+    <input id="coordIn" placeholder="47.1547, 9.8222" inputmode="decimal" autocomplete="off">
+    <button class="btn pri" id="coordOk">OK</button>
+  </div>
+</header>
+<div id="ortSheet" class="osheet hidden" role="dialog" aria-label="Ort suchen">
+  <div class="ohead">
+    <input id="ortQ" type="search" placeholder="Gemeinde, Ortsteil, Pass …" autocomplete="off" autocorrect="off" spellcheck="false" enterkeyhint="search">
+    <button class="btn" id="ortClose">Fertig</button>
+  </div>
+  <div id="ortList" class="olist"></div>
+</div>
+
+<div id="infoSheet" class="ibk hidden" role="dialog" aria-label="Klinik-Details"><div class="ibox" id="infoBox"></div></div>
+<main>
+  <!-- ZIELE -->
+  <section id="v-ziele">
+    <div id="quick"></div>
+    <div class="filters" id="fZiele"></div>
+    <details class="help"><summary>Legende &amp; Hinweise</summary><div>
+    <div class="legend"><span><i style="background:var(--blu)"></i>SHT-Versorger</span><span><i style="border:2px dashed var(--blu)"></i>SHT eventuell</span><span><i style="background:var(--org)"></i>größeres Haus</span><span><i style="background:var(--card2);border:1px solid var(--line)"></i>übrige Häuser</span><span><i style="border:1px dashed var(--acc)"></i>S ~ = geschätzt</span></div>
+    <div class="meta">Schätzung ab Einsatzort. 🚁 = Flugzeit EO→Klinik + Start/Landung, <b>ohne</b> Anflug des Helis zum EO. Grün = schnellere Option. „🚑 ≤ 30 min“ = geschätzte RTW-Fahrzeit; „🚁 Flug ≤ 30 min“ = reine Flugzeit ohne Start/Landung und ohne Anflug (unabhängig vom Heli-Schalter). Die Sortierung in „Alle“ berücksichtigt den Heli nur, wenn oben „🚁 an“. ⚠️ = Straße deutlich länger als Luftlinie.</div>
+    </div></details>
+    <div id="roadInfo" class="meta" style="margin-bottom:8px"></div>
+    <div id="listZiele"></div>
+  </section>
+
+  <!-- KARTE -->
+  <section id="v-karte" class="hidden">
+    <div id="map">
+      <div id="tiles"></div><div id="marks"></div>
+      <div class="mfil filters" id="fMap"></div>
+      <div class="mctl">
+        <button class="mbtn" id="mZin" aria-label="Hineinzoomen">+</button>
+        <button class="mbtn" id="mZout" aria-label="Herauszoomen">−</button>
+        <button class="mbtn" id="mEo" aria-label="Zum Einsatzort">◎</button>
+        <button class="mbtn" id="mFit" aria-label="Alle einpassen">⤢</button>
+      </div>
+      <div class="mnote hidden" id="mNote">Kein Kartenhintergrund (offline oder blockiert) – Positionen stimmen trotzdem. <u>OK</u></div>
+      <div class="attr">© OpenStreetMap-Mitwirkende</div>
+      <div class="sheet hidden" id="mSheet"></div>
+    </div>
+  </section>
+
+  <!-- SPEZIAL -->
+  <section id="v-spez" class="hidden">
+    <div class="filters" id="fSpez">
+      <button class="chip on" data-s="sht">🧠 SHT</button>
+      <button class="chip" data-s="vb">🔥 Verbrennung</button>
+      <button class="chip" data-s="hbo">🫧 HBO (beatmet)</button>
+    </div>
+    <div id="spezHead"></div>
+    <div id="listSpez"></div>
+  </section>
+
+  <!-- MANV -->
+  <section id="v-manv" class="hidden">
+    <div id="manvOld" class="stale hidden" style="margin:0 0 10px"></div>
+    <div class="sumbar">
+      <div><b id="sumS" style="color:var(--red)">0</b><span class="meta">S schwer</span></div>
+      <div><b id="sumL" style="color:var(--grn)">0</b><span class="meta">L leicht</span></div>
+      <div><b id="sumT">0</b><span class="meta">gesamt</span></div>
+    </div>
+    <details class="help"><summary>Legende &amp; Hinweise</summary><div>
+    <div class="meta" style="margin-bottom:6px">S = SR bzw. OP-Dr. 1/2 · L = Amb. bzw. OP-Dr. 3. Kapazität laut Vorlage; „~ geschätzt“ = Schätzwert ohne Klinikbestätigung. Orange = über Grundwert, aber im Bereich laut Vorlage (z. B. FK 3–5 bei „2(-5)“); rot = überschritten.</div>
+    <div class="legend"><span><i style="background:var(--blu)"></i>SHT-Versorger</span><span><i style="border:2px dashed var(--blu)"></i>SHT eventuell</span><span><i style="background:var(--org)"></i>größeres Haus</span><span><i style="background:var(--card2);border:1px solid var(--line)"></i>übrige Häuser</span><span><i style="border:1px dashed var(--acc)"></i>S ~ = geschätzt</span></div>
+    </div></details>
+    <div class="card" id="manvList"></div>
+    <h3>Timeline</h3>
+    <div class="log" id="manvLog">–</div>
+    <div class="acts">
+      <button class="btn" id="shareLog">Teilen / Kopieren</button>
+      <button class="btn" id="undoLog">↶ Letzten zurück</button>
+      <button class="btn" id="resetManv" style="color:var(--red)">Reset</button>
+    </div>
+  </section>
+
+  <!-- INFO -->
+  <section id="v-info" class="hidden">
+    <h2>Hotlines</h2>
+    <a class="tel" href="tel:+4940428514950">🔥 Bettenvermittlung Brandverletzte D (Hamburg)<br><b>+49 40 42851 4950</b></a>
+    <a class="tel" href="tel:+4961119222">🫧 Bettenvermittlung HBO D (Wiesbaden)<br><b>+49 611 19222</b></a>
+    <a class="tel" href="tel:00800326668783">🤿 DAN Tauchunfall-Hotline (Ö &amp; D)<br><b>00800 326 668 783</b></a>
+    <h3>Chemie-Unfall – TUIS</h3>
+    <div class="note">Transport-Unfall-Informations- und Hilfeleistungssystem: fachliche Beratung und praktische Hilfe zur Begrenzung der Unfallfolgen, Tag und Nacht, für Behörden/öffentliche Dienste. <a href="https://www.tuis.at" target="_blank" style="color:var(--blu)">www.tuis.at</a></div>
+    <h3>Links</h3>
+    <a class="tel" href="https://verbrennungsmedizin.de/brandverletztenzentren" target="_blank">Brandverletztenzentren (DGV)</a>
+    <a class="tel" href="https://www.gtuem.org/druckkammern/sh-30.html" target="_blank">Druckkammern (GTÜM)</a>
+
+    <h2 style="margin-top:22px">Rechenmodell</h2>
+    <div class="note red">Zeiten sind <b>Schätzungen aus Luftlinie</b>, keine Navigation. Wetter, Nacht, Pass­sperren, Landeplatz und Klinik­aufnahme nicht berücksichtigt. Aufnahme immer über RFL/Klinik bestätigen.</div>
+    <div class="grid2">
+      <div><label class="f">RTW Ø km/h (Sondersignal)</label><input type="number" id="pRtwV" inputmode="decimal"></div>
+      <div><label class="f">Umwegfaktor Straße</label><input type="number" id="pRtwF" step="0.05" inputmode="decimal"></div>
+      <div><label class="f">Heli Reise km/h</label><input type="number" id="pHeliV" inputmode="decimal"></div>
+      <div><label class="f">Heli Zuschlag min (Start/Landung)</label><input type="number" id="pHeliO" inputmode="decimal"></div>
+    </div>
+    <div class="acts"><button class="btn" id="pReset">Standardwerte</button></div>
+
+    <h2 style="margin-top:22px">Kliniken bearbeiten</h2>
+    <div class="note">Koordinaten sind aus öffentlich bekannten Adressen näherungsweise hinterlegt – bitte prüfen. Telefonnummern trägst du hier selbst ein (werden lokal gespeichert).</div>
+    <select id="editSel"></select>
+    <div id="editBox" class="card" style="margin-top:8px"></div>
+    <div class="acts"><button class="btn" id="exportCfg">Daten exportieren</button><button class="btn" id="importCfg">Importieren</button></div>
+    <textarea id="cfgTxt" class="hidden" rows="4" style="width:100%;margin-top:8px;background:var(--card2);color:var(--txt);border:1px solid var(--line);border-radius:10px;padding:8px;font:13px ui-monospace,Menlo,monospace" placeholder="Exportierte Daten hier einfügen und erneut „Importieren“ tippen"></textarea>
+    <p class="meta" style="margin-top:20px">Version 1.8 · Adressen + Fächer recherchiert 21.11.2026 · Kartendaten © OpenStreetMap-Mitwirkende · Daten basierend auf „Info_Transport“. Keine Gewähr.</p>
+  </section>
+</main>
+
+<nav class="tabs">
+  <button data-v="ziele" class="on"><span>🏥</span>Ziele</button>
+  <button data-v="karte"><span>🗺️</span>Karte</button>
+  <button data-v="spez"><span>⚕️</span>Spezial</button>
+  <button data-v="manv"><span>📋</span>MANV</button>
+  <button data-v="info"><span>ℹ️</span>Info</button>
+</nav>
+<div class="toast" id="toast"></div>
+
+<script>
+"use strict";
+/* ===== Stammdaten =====
+ capS/capL: MANV-Kapazität laut Vorlage (null = keine Angabe, 0 = X/keine)
+ bold: in Timeline-Vorlage fett
+*/
+const DEF_H = [
+ {id:"lkhf",fa:["+Herzkatheter 24/7 (Angabe LNA, gesichert)", "+Neurochirurgie (einzige in Vbg.)", "+Stroke Unit 24/7 + Thrombektomie (in Vbg. nur hier, Stand 2019)", "+Interventionelle Radiologie (Gefäßzentrum)", "+Mobile ECMO (Anästhesie)", "+Unfallchirurgie / Orthopädie, Schockraum", "+Gefäß-, Thorax-, Viszeralchirurgie, MKG, Plastische Chirurgie", "+HNO, Augen, Urologie", "+Kinder- und Jugendheilkunde inkl. Neugeborenen-Intensiv"],faq:"Angabe LNA; VLKH (KPJ-Liste 2025, Jahresberichte Anästhesie 2024, IANS, Med Konkret)",hint:"Rettungszufahrt über Carinagasse (von Liechtensteiner Straße).",adr:"Carinagasse 47, 6800 Feldkirch",n:"Feldkirch, LKH Feldkirch",a:"LKHF / FK",c:"AT",lat:47.2425,lon:9.6120,capS:"2(-5)",capL:30,bold:1,sht:1},
+ {id:"grabs",fa:["+Notfallstation, Intensivstation", "+Kardiologie (Klinik)", "+Schlaganfall-Station (Stroke Unit)", "+Allgemein-/Viszeral-, Hand-, Kiefer-/Gesichtschirurgie, Frauenklinik", "~Herzkatheter: kein Beleg gefunden", "~Thrombektomie: kein Beleg (Stroke Center = KSSG)"],faq:"Arealplan HOCH Spital Grabs, comparis",tel:"+41 81 772 54 50",adr:"Spitalstrasse 44, 9472 Grabs",capE:"1",n:"Grabs, Spital Grabs (HOCH Health Ostschweiz)",a:"Grabs",c:"CH",lat:47.1830,lon:9.4440},
+ {id:"lkhh",fa:["-Keine stationäre Unfallchirurgie (nur Tagesklinik)", "+Innere Medizin + Pulmologie mit interdisziplinärer Intensivstation", "+Palliativ, Psychosomatik, konservative Orthopädie, Urologie", "-Kein Herzkatheter, keine Neurochirurgie belegt"],faq:"Anstaltsordnung LKHH, Patientenbroschüre 2024",adr:"Bahnhofstraße 31, 6845 Hohenems",n:"Hohenems, LKH Hohenems",a:"LKHH / H",c:"AT",lat:47.3637,lon:9.6870,capS:"0",capL:10},
+ {id:"lkhz",fa:["+Unfallchirurgie (sofortige OP laut Haus jederzeit möglich)", "+Allgemeinchirurgie", "+Innere Medizin, Anästhesie/Intensiv", "+Gyn./Geburtshilfe", "~Herzkatheter: kein Beleg gefunden", "-Keine Neurochirurgie, keine Thrombektomie (nur LKHF)"],faq:"VLKH KPJ-Liste LKH Bludenz 2023/2025",adr:"Spitalgasse 13, 6700 Bludenz",n:"Bludenz, LKH Bludenz",a:"LKHZ / BZ",c:"AT",lat:47.1545,lon:9.8235,capS:"(1)",capL:10},
+ {id:"khdo",fa:["+Chirurgie, Unfallchirurgie, Plastische Chirurgie, Orthopädie", "+Innere Medizin 1–3, Intensivstation", "+Gyn./Geburtshilfe, Kinder- und Jugendheilkunde, Neonatologie", "+Augen, HNO", "~Herzkatheter: kein Beleg gefunden", "-Keine Neurochirurgie, keine Thrombektomie (nur LKHF)"],faq:"Gebäudeplan KH Dornbirn, Stadt Dornbirn",adr:"Lustenauerstraße 4, 6850 Dornbirn",n:"Dornbirn, Krankenhaus der Stadt Dornbirn",a:"KH Do / Do",c:"AT",lat:47.4140,lon:9.7300,capS:"1",capL:10},
+ {id:"sgkis",fa:["+Ostschweizer Kinderspital, Neubau auf KSSG-Areal (seit 26.09.2026)", "+Kinder-Notfall, Kinder-IPS/IMC, Neonatologie", "+Kinderchirurgie, Kinderorthopädie", "~Gemeinsamer Notfall mit KSSG erst ab ca. 2030 geplant"],faq:"OKS Medienmitteilungen 2026, Organigramm, LEADER-Spezial 2026",hint:"Neubau auf dem Areal des Kantonsspitals St. Gallen, Betrieb seit 26.09.2026.",adr:"Spitalstrasse 10, 9007 St. Gallen",capE:"1 (Kind)",n:"St. Gallen, Ostschweizer Kinderspital",a:"St. Gallen KiSpi",c:"CH",lat:47.4296,lon:9.3872,kids:1},
+ {id:"sgks",fa:["+HSM-Traumazentrum (größtes der Ostschweiz)", "+Neurochirurgie", "+Herzkatheterlabor (interventionelle Kardiologie)", "~24/7 Herzkatheter nicht ausdrücklich belegt", "+Stroke Center (Thrombektomie-Zentrum)", "+Thoraxchirurgie, Angiologie", "+Kinderspital (OKS) seit 26.09.2026 auf dem Areal"],faq:"KSSG Organigramm, Stellenausschreibungen, Duo-Magazin, Wikipedia",adr:"Rorschacher Strasse 95, 9007 St. Gallen",n:"St. Gallen, Kantonsspital St. Gallen (HOCH Health Ostschweiz)",a:"St. Gallen KS",c:"CH",lat:47.4301,lon:9.3878,capS:"2",bold:1,sht:1},
+ {id:"schenk",fa:["+Privatklinik Unfall-/Sportchirurgie", "+Eigene Rettungshubschrauber (Wintersaison)", "-Kein Akut-Vollspital: keine Neurochirurgie, kein Herzkatheter belegt"],faq:"Montafon Tourismus, WKO",hint:"Hubschrauberlandeplatz direkt am Haus (LOIY).",adr:"Montafonerstraße 29, 6780 Schruns",capE:"0–1",n:"Schruns, Sanatorium Dr. Schenk",a:"San. Schenk",c:"AT",lat:47.0738,lon:9.9133},
+ {id:"lkhb",fa:["+Unfallchirurgie", "+Chirurgie, Urologie", "+Innere Medizin mit Intensivstation", "-Kein Herzkatheter (Kardiologie „außer Herzkatheter“)", "-Keine Neurochirurgie, keine Thrombektomie (nur LKHF)", "+Kinder- und Jugendheilkunde, Gyn./Geburtshilfe"],faq:"VLKH KPJ-Liste LKH Bregenz 2023/2025",adr:"Carl-Pedenz-Straße 2, 6900 Bregenz",n:"Bregenz, LKH Bregenz",a:"LKHB / B",c:"AT",lat:47.4980,lon:9.7360,capS:"1",capL:10},
+ {id:"chur",fa:["+Neurochirurgie", "+Stroke Center (IVHSM-Auftrag, Thrombektomie)", "+Herzkatheterlabor", "~24/7 Herzkatheter nicht ausdrücklich belegt", "+Gefäß- und Thoraxchirurgie, Kinder- und Jugendmedizin", "~SHT/Polytrauma-HSM-Auftrag nicht belegt (darum ‚eventuell‘)"],faq:"Spitalliste GR, Südostschweiz, comparis",adr:"Loëstrasse 170, 7000 Chur",big:1,shtP:1,capE:"2",n:"Chur, Kantonsspital Graubünden",a:"Chur KS",c:"CH",lat:46.8560,lon:9.5440},
+ {id:"fn",fa:["+Unfallchirurgie / Orthopädie", "+Kardiologie, Angiologie, Pneumologie, int. Intensiv", "+Neurologie", "~Herzkatheter 24 h: nicht belegt", "~Neurochirurgie: kein Beleg"],faq:"Deutsches Krankenhausverzeichnis",adr:"Röntgenstraße 2, 88048 Friedrichshafen",big:1,n:"Friedrichshafen, Klinikum Friedrichshafen",a:"Friedrichshafen",c:"DE",lat:47.6630,lon:9.4600,capS:"1",bold:1},
+ {id:"kn",fa:["+Unfallchirurgie, Thoraxchirurgie, Gefäß- und Kinderchirurgie", "+Herz-Zentrum Bodensee auf dem Gelände (Herzchirurgie, Herzkatheter)", "+MKG, HNO, Augen, Urologie, Neonatologie", "~Neurochirurgie: kein Beleg"],faq:"Deutsches Krankenhausverzeichnis, kliniken.de",adr:"Mainaustraße 35, 78464 Konstanz",big:1,n:"Konstanz, Klinikum Konstanz",a:"Konstanz",c:"DE",lat:47.6680,lon:9.1720,capS:"1"},
+ {id:"imm",fa:["+Herzkatheterlabor mit 24-h-Rufbereitschaft", "+Spezialklinik für Herz-, Lungen- und Gefäßmedizin", "+Unfallchirurgie / Orthopädie, Allgemeinchirurgie", "-Keine Neurochirurgie belegt"],faq:"Klinikverbund Allgäu, Stellenanzeigen, DKV",tel:"+49 8323 910-8717",hint:"Schockraum-Anmeldung direkt beim Notfallkoordinator der Notaufnahme (Tel. siehe unten).",adr:"Im Stillen 2, 87509 Immenstadt",n:"Immenstadt, Klinik Immenstadt",a:"Immenstadt",c:"DE",lat:47.5600,lon:10.2180,capS:"1"},
+ {id:"rv",fa:["+Herzkatheter rund um die Uhr (2 Labore)", "+Überregionales Traumazentrum, SAV-Zulassung", "+Neurochirurgie", "+Neurologie mit überregionaler Stroke Unit, Neuroradiologie", "+MKG, Kinder (Perinatalzentrum Level 1)"],faq:"oberschwabenklinik.de, Schwäbische, Ärzteblatt-Stellenanzeigen",adr:"Elisabethenstraße 15, 88212 Ravensburg",n:"Ravensburg, Oberschwabenklinik – Krankenhaus St. Elisabeth",a:"Ravensburg",c:"DE",lat:47.7770,lon:9.6200,capS:"2",bold:1,sht:1},
+ {id:"ueb",fa:["+Unfallchirurgie / Orthopädie, Allgemein-, Gefäßchirurgie", "+Kardiologie, Gastroenterologie", "+Anästhesie, Intensiv- und Tauchmedizin", "~Kleines Haus (ca. 170 Betten)", "~Herzkatheter, Druckkammer: kein Beleg"],faq:"Deutsches Krankenhausverzeichnis",adr:"Härlenweg 1, 88662 Überlingen",capE:"1",n:"Überlingen, Helios Spital Überlingen",a:"Überlingen",c:"DE",lat:47.7700,lon:9.1560},
+ {id:"zams",fa:["+Erweitertes Standardkrankenhaus", "+Unfallchirurgie, Allgemeinchirurgie, Orthopädie", "+Innere Medizin mit Intensivstation", "+Pädiatrie, Gyn./Geburtshilfe, HNO, Augen, Urologie", "~Neurochirurgie / Herzkatheter: kein Beleg"],faq:"kliniken.de, Stellenausschreibungen KH Zams",adr:"Sanatoriumstraße 43, 6511 Zams",n:"Zams, Krankenhaus St. Vinzenz",a:"Zams",c:"AT",lat:47.1590,lon:10.5880,capS:"1"},
+ {id:"reutte",fa:["+Unfallchirurgie (35 Betten, Extremitäten)", "+Chirurgie, Innere/Kardiologie, Intensiv", "-Akut-Herzkatheter über Kooperation KH Füssen (kein eigenes Labor)", "+Gyn./Geburtshilfe, HNO"],faq:"Herold, Tiroler Tageszeitung, Bezirksblätter",adr:"Krankenhausstraße 39, 6600 Ehenbichl",n:"Reutte, Bezirkskrankenhaus Reutte",a:"Reutte",c:"AT",lat:47.4870,lon:10.7170,capS:"1"},
+ {id:"ke",fa:["+Überregionales Traumazentrum", "+Neurochirurgie (ICB, SAB, SDH, EDH, spinale Traumen)", "+Neurologie (Apoplex)", "+Kardiologie (Herz- und Gefäßzentrum mit Immenstadt)", "~24 h Herzkatheter am Standort Kempten nicht ausdrücklich belegt", "+Perinatalzentrum, Kinderchirurgie"],faq:"Klinikverbund Allgäu, Infobroschüre Rettungsdienst",hint:"Anfahrt Notaufnahme über Pettenkoferstraße (Infobroschüre Rettungsdienst).",adr:"Robert-Weixler-Straße 50, 87439 Kempten",n:"Kempten, Klinikum Kempten",a:"Kempten",c:"DE",lat:47.7180,lon:10.3200,capS:"2",bold:1,sht:1},
+ {id:"mm",fa:["+Regionales Traumazentrum (VAV)", "+Neurochirurgie, Neurologie", "+Chest Pain Unit (DGK-zertifiziert, bis 01/2027)", "+Allgemein-, Thorax-, Gefäßchirurgie, Urologie", "+Kinder, Neonatologie"],faq:"klinikum-memmingen.de, DKV, Stellenanzeigen",adr:"Bismarckstraße 23, 87700 Memmingen",big:1,n:"Memmingen, Klinikum Memmingen",a:"Memmingen",c:"DE",lat:47.9800,lon:10.1900,capS:"2"},
+ {id:"zhkis",fa:["+Größtes Zentrum für Pädiatrie und Kinderchirurgie der Schweiz", "+Notfallstation, Neubau Lengg (seit 11/2024)", "+Brandverletzte Kinder (laut Vorlage)", "~Weitere Fächer nicht einzeln recherchiert"],faq:"uzh.ch, Kispi Jahresbericht 2024/2025",adr:"Lenggstrasse 30, 8008 Zürich",big:1,capE:"1 (Kind)",n:"Zürich, Universitäts-Kinderspital Zürich",a:"Zürich KiSpi",c:"CH",lat:47.3550,lon:8.5770,kids:1,vbK:1},
+ {id:"usz",fa:["+HSM-Traumazentrum (eines von 12 in CH), Level 1", "+Schockraum mit integriertem CT", "+Zentrum für Schwerbrandverletzte (eines von 2 in CH)", "+Neurochirurgie, MKG, Viszeral-, Plastische Chirurgie", "~Herzkatheter/Thrombektomie nicht recherchiert (Universitätsspital)"],faq:"usz.ch",hint:"Adresse = Notfalleingang (Haupteingang Rämistrasse 100).",adr:"Schmelzbergstrasse 8, 8091 Zürich",big:1,shtP:1,capE:"2",n:"Zürich, Universitätsspital Zürich",a:"Zürich Uni",c:"CH",lat:47.3770,lon:8.5510,bold:1,vbE:1},
+ {id:"murnau",fa:["+Überregionales Traumazentrum (Maximalversorgung)", "+Neurochirurgie, SHT", "+Querschnittzentrum, Brandverletzte", "+Druckkammer auch für intensivpflichtige Patienten (HBO)", "+Kindertrauma, Mittelgesicht, Neuroradiologie", "~Herzkatheter: kein Beleg"],faq:"BG Kliniken, DKV, GTÜM caisson 2017",adr:"Prof.-Küntscher-Straße 8, 82418 Murnau",n:"Murnau, BG Unfallklinik Murnau",a:"Murnau BG",c:"DE",lat:47.6830,lon:11.1950,capS:"2",bold:1,sht:1,vbE:1,hbo:1},
+ {id:"ulmuni",fa:["+Überregionales Traumazentrum (gemeinsam mit BWK Ulm)", "+Neurochirurgie", "+Herz-, Thorax- und Gefäßchirurgie", "+Universitätsklinikum (alle Fächer)", "~24/7 Herzkatheter nicht ausdrücklich belegt"],faq:"uniklinik-ulm.de",hint:"ZINA: aus Richtung Stadt direkt nach Chirurgie-Neubau links, Zufahrt mit Schranke.",adr:"Albert-Einstein-Allee 23, 89081 Ulm",capE:"2",n:"Ulm, Universitätsklinikum Ulm",a:"Ulm Uni",c:"DE",lat:48.4220,lon:9.9530,bold:1,sht:1},
+ {id:"ulmbwk",fa:["+Überregionales Traumazentrum (gemeinsam mit Uni Ulm)", "+Neurochirurgie, Unfallchirurgie", "+Neurologie mit Schlaganfallmedizin", "+Druckkammer mit 24-h-Bereitschaft inkl. Intensivpatienten (GTÜM-Liste 2022)", "+Gefäßchirurgie, Urologie", "~Herzkatheter: kein Beleg"],faq:"DKV, Qualitätsbericht BWK Ulm 2022, GTÜM-Liste 2022",hint:"Dachlandeplatz mit Aufzug direkt in die Notaufnahme (seit 2022).",adr:"Oberer Eselsberg 40, 89081 Ulm",capE:"2",n:"Ulm, Bundeswehrkrankenhaus Ulm",a:"Ulm BWK",c:"DE",lat:48.4245,lon:9.9600,bold:1,sht:1,hbo:1},
+ {id:"ibk",fa:["+Universitätskliniken", "+Schockraum: Neurochirurgie, Viszeral-, Gefäß-, Kiefer-, Plastische, Herzchirurgie binnen Minuten", "+Kinderklinik gesamtes Spektrum inkl. Frühgeborene", "~24/7 Herzkatheter nicht ausdrücklich belegt"],faq:"Land Tirol (QM Schockraum), Med. Uni Innsbruck",hint:"Unfallchirurgische Notaufnahme: Zufahrt Schöpfstraße (laut Lageplan).",adr:"Anichstraße 35, 6020 Innsbruck",n:"Innsbruck, Universitätskliniken Innsbruck",a:"IBK",c:"AT",lat:47.2635,lon:11.3850,capS:"2",bold:1,sht:1},
+ {id:"tueb",fa:["+Überregionales Traumazentrum (gemeinsam mit Uniklinik Tübingen)", "+Hand-, Plastische, Rekonstruktive und Verbrennungschirurgie", "+Querschnitt, Wirbelsäulenchirurgie", "+Unfall- und Wiederherstellungschirurgie, MKG", "-Keine Neurochirurgie / Kardiologie im Haus (Kooperation Uniklinik)"],faq:"DKV Qualitätsbericht 2022, BG Kliniken",adr:"Schnarrenbergstraße 95, 72076 Tübingen",big:1,capE:"2",n:"Tübingen, BG Klinik Tübingen",a:"Tübingen BG",c:"DE",lat:48.5340,lon:9.0380,vbE:1},
+ {id:"stmh",fa:["+Zentrum für Schwerbrandverletzte", "+Orthopädie und Unfallchirurgie (24 h Notfallversorgung)", "+Kardiologie und Gefäßmedizin, internistische Intensiv", "+Allgemein-, Viszeral-, Thoraxchirurgie, HNO, Gyn.", "~Herzkatheter 24 h, Neurochirurgie: nicht belegt"],faq:"DKV, privat-patienten.de",adr:"Böheimstraße 37, 70199 Stuttgart",big:1,capE:"1",n:"Stuttgart, Marienhospital Stuttgart (Vinzenz von Paul Kliniken)",a:"Stuttgart Marienh.",c:"DE",lat:48.7620,lon:9.1680,vbE:1},
+ {id:"stkl",fa:["+Deutschlands größte Kinderklinik, größte Kinder-Intensivstation", "+Zentrum für schwerbrandverletzte Kinder (Kinderchirurgie)", "+Kinderorthopädie, Kinder-HNO, Perinatalzentrum", "+Notfälle rund um die Uhr"],faq:"DKV, Stuttgarter Zeitung, Klinikum Stuttgart",adr:"Kriegsbergstraße 62, 70174 Stuttgart",big:1,capE:"1 (Kind)",n:"Stuttgart, Klinikum Stuttgart – Olgahospital (Kinder)",a:"Stuttgart Klinik",c:"DE",lat:48.7880,lon:9.1680,vbK:1,kids:1},
+ {id:"hauner",fa:["+Universitäts-Kinderklinik (LMU Klinikum)", "+Interdisziplinäre Kinder-Notaufnahme, 13 Behandlungsplätze, alle Schweregrade", "+Kinderheilkunde und Kinderchirurgie", "+Brandverletzte Kinder laut DGV-Liste (nicht in Vorlage)", "~Umzug nach Großhadern geplant (ca. 2029) – Standort vor Fahrt prüfen"],faq:"LMU Klinikum, München-Wiki, DGV",adr:"Lindwurmstraße 4, 80337 München",note:"Nicht in Vorlage – Aufnahme vorab klären.",n:"München, Dr. von Haunersches Kinderspital (LMU Klinikum)",a:"MUC Hauner",c:"DE",lat:48.1323,lon:11.5617,kids:1,vbK:1},
+{id:"mucsw",fa:["+Zentrum für schwerbrandverletzte Kinder", "+Kinderchirurgie, Kinder- und Jugendmedizin (mit TUM)", "+Neurochirurgie, Akut- und Notfallmedizin", "+Kardiologie (Taschenkarte RD München)"],faq:"DKV, Stadt München Taschenkarte Sonderbetten Kinder",adr:"Kölner Platz 1, 80804 München",capE:"1",n:"München, München Klinik Schwabing",a:"MUC Schwabing",c:"DE",lat:48.1730,lon:11.5800,sht:1,vbK:1,kids:1},
+ {id:"mucbh",fa:["+Plastische-, Rekonstruktive-, Hand- und Verbrennungschirurgie (Erwachsene)", "+Neurochirurgie", "+Kardiologie (inkl. interventionelle Elektrophysiologie)", "~24 h Herzkatheter / Trauma-Stufe nicht belegt"],faq:"DKV Qualitätsbericht 2023",adr:"Englschalkinger Straße 77, 81925 München",capE:"2",n:"München, München Klinik Bogenhausen",a:"MUC Bogenhausen",c:"DE",lat:48.1550,lon:11.6320,sht:1,vbE:1},
+ {id:"mucgh",fa:["+Überregionales Traumazentrum, SAV (LMU)", "+Schockraum inkl. Polytrauma, Stroke-Versorgung, Chest Pain", "+ECMO (schwerstes ARDS, ITS 2/4)", "+Transplantationszentrum, alle Fächer", "+Zufahrt mit Auto bis vor die Notaufnahme"],faq:"lmu-klinikum.de",adr:"Marchioninistraße 15, 81377 München",capE:"2",n:"München, LMU Klinikum Großhadern",a:"MUC Großhadern",c:"DE",lat:48.1100,lon:11.4700,sht:1},
+ {id:"mucri",fa:["+Universitätsklinikum (TUM), Traumazentrum", "+Neurochirurgie, Neurologie", "+Kardiologie, Angiologie, Pneumologie", "+Plastische und Handchirurgie, MKG, Neonatologie", "~24 h Herzkatheter nicht ausdrücklich belegt"],faq:"DKV, kliniken.de, TUM Organigramm",adr:"Ismaninger Straße 22, 81675 München",capE:"2",n:"München, TUM Klinikum Rechts der Isar",a:"MUC Rechts d. Isar",c:"DE",lat:48.1370,lon:11.6000,sht:1},
+ {id:"lu",fa:["+Schwerbrandverletztenzentrum (Hand-, Plastische Chirurgie)", "+Unfallchirurgie und Orthopädie", "+Neurochirurgie", "+Querschnittgelähmte", "~Kardiologie / Herzkatheter: kein Beleg"],faq:"DKV Qualitätsbericht 2023, klinikradar",adr:"Ludwig-Guttmann-Straße 13, 67071 Ludwigshafen",big:1,capE:"2",n:"Ludwigshafen, BG Klinik Ludwigshafen",a:"Ludwigshafen BG",c:"DE",lat:49.4580,lon:8.3970,vbE:1},
+ {id:"nbg",fa:["+Zentrum für Schwerbrandverletzte", "+Neurochirurgie, Herzchirurgie", "+Kinderklinik, Kinderchirurgie, Kinder-Notaufnahme", "+Orthopädie und Unfallchirurgie", "~Herzkatheter 24 h nicht einzeln geprüft (Maximalversorger)"],faq:"DKV, Klinikum Nürnberg Rufnummernliste 2025",adr:"Breslauer Straße 201, 90471 Nürnberg",big:1,capE:"2",n:"Nürnberg, Klinikum Nürnberg Süd",a:"Nürnberg Süd",c:"DE",lat:49.4140,lon:11.0920,vbE:1,vbK:1},
+ {id:"ma",fa:["+Universitätsklinikum Mannheim", "+Kinderchirurgie mit Versorgung brandverletzter Kinder", "~Übrige Fächer nicht einzeln recherchiert"],faq:"DKV, Verbrennungszentren-Liste",adr:"Theodor-Kutzer-Ufer 1-3, 68167 Mannheim",big:1,capE:"2",n:"Mannheim, Universitätsklinikum Mannheim",a:"Mannheim Uni",c:"DE",lat:49.4930,lon:8.4870,vbK:1,kids:1},
+ {id:"lb",fa:["+Druckkammer (HBO) am Klinikum, Hyperbarmedizin in der Anästhesie", "~24-h-Bereitschaft für beatmete Patienten nicht belegt – vorab klären", "~Übrige Fächer nicht recherchiert"],faq:"Vortrag Klinikum Ludwigsburg (2017)",adr:"Posilipostraße 4, 71640 Ludwigsburg",big:1,capE:"1",n:"Ludwigsburg, RKH Klinikum Ludwigsburg (Druckkammer-Centrum Stuttgart)",a:"Ludwigsburg",c:"DE",lat:48.8970,lon:9.1970,hbo:1},
+ {id:"ts",fa:["+Druckkammerzentrum (HBO) – laut Land OÖ einer der wenigen HBO-Standorte der Region", "+Anästhesie/Intensiv 24 h, Perinatalzentrum Level 1", "~Beatmete Patienten in der Kammer nicht ausdrücklich belegt"],faq:"Land Oberösterreich, privat-patienten.de",adr:"Cuno-Niggl-Straße 3, 83278 Traunstein",big:1,capE:"1",n:"Traunstein, Klinikum Traunstein (Druckkammerzentrum)",a:"Traunstein",c:"DE",lat:47.8650,lon:12.6460,hbo:1},
+ {id:"rgb",fa:["+Zwei Druckkammern, HBO inkl. Intensivpatienten (GTÜM-Liste 2022: 24 h)", "+Unfallchirurgie, Allgemein-, Viszeral-, Thoraxchirurgie, Urologie", "~Heli-Landeplatz an Uniklinik Regensburg (Sekundärtransport nötig, laut Vorlage)", "~Neurochirurgie / Herzkatheter: kein Beleg"],faq:"DKV, CSJ Flyer 2026, GTÜM-Liste 2022",adr:"Landshuter Straße 65, 93053 Regensburg",capE:"1",n:"Regensburg, Caritas-Krankenhaus St. Josef",a:"Regensburg",c:"DE",lat:49.0040,lon:12.1080,hbo:1,
+   note:"CAVE: Heli-Platz an Uni Regensburg → Sekundärtransport nötig"}
+];
+const ORTE = [
+ ["Bartholomäberg",47.088,9.910,"Bez. Bludenz"],
+ ["Blons",47.222,9.857,"Bez. Bludenz"],
+ ["Bludenz",47.155,9.822,"Bez. Bludenz"],
+ ["Bludesch",47.199,9.735,"Bez. Bludenz"],
+ ["Brand",47.103,9.737,"Bez. Bludenz"],
+ ["Bürs",47.150,9.807,"Bez. Bludenz"],
+ ["Bürserberg",47.146,9.778,"Bez. Bludenz"],
+ ["Dalaas",47.126,9.988,"Bez. Bludenz"],
+ ["Fontanella",47.244,9.945,"Bez. Bludenz"],
+ ["Gaschurn",46.987,10.028,"Bez. Bludenz"],
+ ["Innerbraz",47.144,9.913,"Bez. Bludenz"],
+ ["Klösterle",47.130,10.064,"Bez. Bludenz"],
+ ["Lech",47.208,10.142,"Bez. Bludenz"],
+ ["Lorüns",47.128,9.850,"Bez. Bludenz"],
+ ["Ludesch",47.193,9.781,"Bez. Bludenz"],
+ ["Nenzing",47.184,9.701,"Bez. Bludenz"],
+ ["Nüziders",47.169,9.800,"Bez. Bludenz"],
+ ["Raggal",47.208,9.842,"Bez. Bludenz"],
+ ["St. Anton im Montafon",47.115,9.865,"Bez. Bludenz"],
+ ["St. Gallenkirch",47.020,9.978,"Bez. Bludenz"],
+ ["St. Gerold",47.219,9.822,"Bez. Bludenz"],
+ ["Schruns",47.080,9.920,"Bez. Bludenz"],
+ ["Silbertal",47.094,9.982,"Bez. Bludenz"],
+ ["Sonntag",47.237,9.903,"Bez. Bludenz"],
+ ["Stallehr",47.137,9.848,"Bez. Bludenz"],
+ ["Thüringen",47.203,9.770,"Bez. Bludenz"],
+ ["Thüringerberg",47.214,9.787,"Bez. Bludenz"],
+ ["Tschagguns",47.077,9.905,"Bez. Bludenz"],
+ ["Vandans",47.096,9.865,"Bez. Bludenz"],
+ ["Alberschwende",47.452,9.830,"Bez. Bregenz"],
+ ["Andelsbuch",47.411,9.895,"Bez. Bregenz"],
+ ["Au",47.322,10.010,"Bez. Bregenz"],
+ ["Bezau",47.384,9.902,"Bez. Bregenz"],
+ ["Bildstein",47.455,9.770,"Bez. Bregenz"],
+ ["Bizau",47.371,9.928,"Bez. Bregenz"],
+ ["Bregenz",47.503,9.747,"Bez. Bregenz"],
+ ["Buch",47.448,9.792,"Bez. Bregenz"],
+ ["Damüls",47.281,9.892,"Bez. Bregenz"],
+ ["Doren",47.494,9.873,"Bez. Bregenz"],
+ ["Egg",47.433,9.897,"Bez. Bregenz"],
+ ["Eichenberg",47.535,9.783,"Bez. Bregenz"],
+ ["Fußach",47.477,9.663,"Bez. Bregenz"],
+ ["Gaißau",47.468,9.600,"Bez. Bregenz"],
+ ["Hard",47.489,9.690,"Bez. Bregenz"],
+ ["Hittisau",47.458,9.959,"Bez. Bregenz"],
+ ["Höchst",47.459,9.640,"Bez. Bregenz"],
+ ["Hohenweiler",47.590,9.785,"Bez. Bregenz"],
+ ["Hörbranz",47.554,9.756,"Bez. Bregenz"],
+ ["Kennelbach",47.479,9.766,"Bez. Bregenz"],
+ ["Krumbach",47.484,9.931,"Bez. Bregenz"],
+ ["Langen bei Bregenz",47.523,9.815,"Bez. Bregenz"],
+ ["Langenegg",47.466,9.900,"Bez. Bregenz"],
+ ["Lauterach",47.475,9.730,"Bez. Bregenz"],
+ ["Lingenau",47.449,9.920,"Bez. Bregenz"],
+ ["Lochau",47.533,9.750,"Bez. Bregenz"],
+ ["Mellau",47.350,9.882,"Bez. Bregenz"],
+ ["Mittelberg (Kleinwalsertal)",47.322,10.153,"Bez. Bregenz"],
+ ["Möggers",47.567,9.818,"Bez. Bregenz"],
+ ["Reuthe",47.374,9.890,"Bez. Bregenz"],
+ ["Riefensberg",47.501,9.958,"Bez. Bregenz"],
+ ["Schnepfau",47.357,9.948,"Bez. Bregenz"],
+ ["Schoppernau",47.312,10.017,"Bez. Bregenz"],
+ ["Schröcken",47.258,10.091,"Bez. Bregenz"],
+ ["Schwarzach",47.448,9.762,"Bez. Bregenz"],
+ ["Schwarzenberg",47.413,9.851,"Bez. Bregenz"],
+ ["Sibratsgfäll",47.428,10.034,"Bez. Bregenz"],
+ ["Sulzberg",47.522,9.913,"Bez. Bregenz"],
+ ["Warth",47.256,10.183,"Bez. Bregenz"],
+ ["Wolfurt",47.468,9.747,"Bez. Bregenz"],
+ ["Dornbirn",47.413,9.742,"Bez. Dornbirn"],
+ ["Hohenems",47.367,9.683,"Bez. Dornbirn"],
+ ["Lustenau",47.427,9.660,"Bez. Dornbirn"],
+ ["Altach",47.350,9.652,"Bez. Feldkirch"],
+ ["Düns",47.226,9.716,"Bez. Feldkirch"],
+ ["Dünserberg",47.231,9.733,"Bez. Feldkirch"],
+ ["Feldkirch",47.238,9.598,"Bez. Feldkirch"],
+ ["Frastanz",47.218,9.628,"Bez. Feldkirch"],
+ ["Fraxern",47.314,9.678,"Bez. Feldkirch"],
+ ["Göfis",47.236,9.633,"Bez. Feldkirch"],
+ ["Götzis",47.335,9.634,"Bez. Feldkirch"],
+ ["Klaus",47.311,9.646,"Bez. Feldkirch"],
+ ["Koblach",47.332,9.600,"Bez. Feldkirch"],
+ ["Laterns",47.265,9.735,"Bez. Feldkirch"],
+ ["Mäder",47.352,9.610,"Bez. Feldkirch"],
+ ["Meiningen",47.299,9.582,"Bez. Feldkirch"],
+ ["Rankweil",47.271,9.642,"Bez. Feldkirch"],
+ ["Röns",47.218,9.693,"Bez. Feldkirch"],
+ ["Röthis",47.292,9.652,"Bez. Feldkirch"],
+ ["Satteins",47.222,9.665,"Bez. Feldkirch"],
+ ["Schlins",47.200,9.697,"Bez. Feldkirch"],
+ ["Schnifis",47.216,9.718,"Bez. Feldkirch"],
+ ["Sulz",47.285,9.654,"Bez. Feldkirch"],
+ ["Übersaxen",47.252,9.674,"Bez. Feldkirch"],
+ ["Viktorsberg",47.304,9.672,"Bez. Feldkirch"],
+ ["Weiler",47.297,9.652,"Bez. Feldkirch"],
+ ["Zwischenwasser",47.282,9.678,"Bez. Feldkirch"],
+ ["Riezlern",47.357,10.188,"Ortsteil · Kleinwalsertal"],
+ ["Hirschegg",47.346,10.172,"Ortsteil · Kleinwalsertal"],
+ ["Baad",47.305,10.124,"Ortsteil · Kleinwalsertal"],
+ ["Zürs",47.170,10.170,"Ortsteil · Lech"],
+ ["Stuben am Arlberg",47.137,10.164,"Ortsteil · Klösterle"],
+ ["Partenen",46.970,10.080,"Ortsteil · Gaschurn"],
+ ["Bielerhöhe (Silvretta)",46.918,10.093,"Pass · Gaschurn"],
+ ["Gargellen",46.970,9.920,"Ortsteil · St. Gallenkirch"],
+ ["Faschina",47.268,9.926,"Ortsteil · Fontanella"],
+ ["Latschau",47.072,9.880,"Ortsteil · Tschagguns"],
+ ["Brand – Palüd",47.090,9.730,"Ortsteil · Brand"],
+ ["Bödele",47.426,9.817,"Pass · Dornbirn/Schwarzenberg"],
+ ["Furkajoch",47.270,9.770,"Pass · Laterns/Damüls"],
+ ["Hochtannbergpass",47.267,10.115,"Pass · Schröcken/Warth"],
+ ["Flexenpass",47.150,10.168,"Pass · Lech/Klösterle"],
+ ["Arlbergpass",47.130,10.212,"Pass · Vbg/Tirol"],
+ ["Ebnit",47.360,9.755,"Ortsteil · Dornbirn"],
+ ["Gurtis",47.198,9.660,"Ortsteil · Nenzing"],
+ ["St. Anton am Arlberg",47.129,10.268,"Tirol"],
+ ["St. Christoph a. A.",47.130,10.235,"Tirol"],
+ ["Landeck",47.139,10.566,"Tirol"],
+ ["Galtür",46.968,10.186,"Tirol"],
+ ["Ischgl",47.012,10.290,"Tirol"],
+ ["Vaduz",47.141,9.521,"Liechtenstein"],
+ ["Schaan",47.165,9.509,"Liechtenstein"],
+ ["Balzers",47.066,9.503,"Liechtenstein"],
+ ["Buchs SG",47.168,9.478,"Schweiz"],
+ ["Altstätten",47.377,9.548,"Schweiz"],
+ ["St. Margrethen",47.452,9.637,"Schweiz"],
+ ["Lindau",47.546,9.684,"Deutschland"],
+ ["Oberstdorf",47.410,10.279,"Deutschland"],
+ ["Oberstaufen",47.556,10.022,"Deutschland"],
+ ["Lindenberg i. Allgäu",47.603,9.890,"Deutschland"]
+];
+const SPEZ = {
+ sht:{t:"SHT", head:`<div class="note">Zielkliniken laut Vorlage: FK, St. Gallen, Ravensburg, Kempten, Murnau, IBK / Ulm (BWK + Uni) / MUC (Großhadern, Rechts der Isar, Schwabing, Bogenhausen). <span style="color:var(--blu)">Gestrichelt</span> = Chur, USZ: SHT eventuell, nicht in Vorlage – Aufnahme vorab klären.</div>`,
+   f:h=>h.sht||h.shtP},
+ vb:{t:"Verbrennung", head:`<a class="tel" href="tel:+4940428514950">Zentrale Bettenvermittlung D (Hamburg)<br><b>+49 40 42851 4950</b></a>
+   <div class="note red"><b>MANV:</b> eher 30–40 % KÖF (statt &gt;80 %) ins Zentrum; ggf. PCH ad EO. KÖF wird meist überschätzt (bis verdoppelt).</div>
+   <div class="filters" id="vbF"><button class="chip on" data-k="E">Erwachsene</button><button class="chip" data-k="K">Kinder</button></div>`,
+   f:h=>vbMode==="K"?h.vbK:h.vbE},
+ hbo:{t:"HBO", head:`<a class="tel" href="tel:+4961119222">Zentrale Bettenvermittlung HBO D (Wiesbaden)<br><b>+49 611 19222</b></a>
+   <a class="tel" href="tel:00800326668783">DAN Tauchunfall-Hotline (Ö &amp; D)<br><b>00800 326 668 783</b></a>
+   <div class="note">Nur Druckkammern für <b>beatmete</b> Patienten laut Vorlage. Übersicht: <a style="color:var(--blu)" href="https://www.gtuem.org/druckkammern/sh-30.html" target="_blank">gtuem.org</a></div>`,
+   f:h=>h.hbo}
+};
+const DEF_P = {rtwV:65, rtwF:1.35, heliV:220, heliO:8};
+const FLAG = {AT:"🇦🇹",CH:"🇨🇭",DE:"🇩🇪"};
+
+/* ===== Storage ===== */
+const LS = {
+  get(k,d){try{const v=localStorage.getItem("lna_"+k);return v?JSON.parse(v):d}catch(e){return d}},
+  set(k,v){try{localStorage.setItem("lna_"+k,JSON.stringify(v))}catch(e){}}
+};
+let P = Object.assign({},DEF_P,LS.get("p",{}));
+let OVR = LS.get("ovr",{});
+for(const [id,o] of Object.entries(OVR)){ const d=DEF_H.find(x=>x.id===id); if(!d){delete OVR[id];continue}
+  if(o.lat!=null&&Math.abs(o.lat-d.lat)<1e-6&&Math.abs(o.lon-d.lon)<1e-6){delete o.lat;delete o.lon} }           // Klinik-Overrides {id:{lat,lon,tel,note}}
+let POS = LS.get("pos",null);          // {lat,lon,name,src,ts}
+let MANV = LS.get("manv",{cnt:{},log:[]});
+let ROAD = {};                          // id -> {km,min}
+let fZ = "alle", spez = "sht", vbMode = "E";
+let HELI = LS.get("heli",true);
+
+const H = () => DEF_H.map(h=>Object.assign({},h,OVR[h.id]||{}));
+const $ = s=>document.querySelector(s);
+const esc = s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+function toast(t){const e=$("#toast");e.textContent=t;e.classList.add("on");clearTimeout(e._t);e._t=setTimeout(()=>e.classList.remove("on"),1800)}
+
+/* ===== Problemzonen: Luftlinie unterschätzt die Straße ===== */
+const ZONES = [
+ {n:"Kleinwalsertal", lat:47.335, lon:10.165, r:8, f:h=>h.c!=="DE",
+  t:"Kleinwalsertal: Straße nur über Oberstdorf (D). RTW nach Vorarlberg/CH real deutlich länger als angezeigt – Kempten/Immenstadt prüfen."},
+ {n:"Montafon", lat:47.0, lon:10.0, r:15, f:h=>h.c==="CH",
+  t:"Montafon: keine direkte Straße in die Schweiz. RTW nur über Feldkirch/Rheintal – real deutlich länger als angezeigt."},
+ {n:"Brandnertal", lat:47.10, lon:9.74, r:6, f:h=>h.c==="CH",
+  t:"Brandnertal: keine direkte Straße in die Schweiz. RTW nur über Bludenz/Feldkirch – real länger als angezeigt."},
+ {n:"Arlberg/Lech/Warth", lat:47.20, lon:10.15, r:9, f:h=>true,
+  t:"Arlberg/Lech/Warth: Flexen- bzw. Hochtannbergstraße im Winter evtl. gesperrt – Straßenzeit nicht verlässlich."}
+];
+function zoneWarn(h){ if(!POS) return null;
+  const z=ZONES.find(z=>hav(POS.lat,POS.lon,z.lat,z.lon)<=z.r && z.f(h)); return z?z.t:null }
+
+/* ===== Rechnen ===== */
+function hav(a,b,c,d){const R=6371,r=Math.PI/180,x=(c-a)*r,y=(d-b)*r;
+  const s=Math.sin(x/2)**2+Math.cos(a*r)*Math.cos(c*r)*Math.sin(y/2)**2;return 2*R*Math.asin(Math.sqrt(s))}
+function calc(h){
+  if(!POS) return null;
+  const km = hav(POS.lat,POS.lon,h.lat,h.lon);
+  const road = km*P.rtwF;
+  const rtw = road/P.rtwV*60 + 2;
+  const flug = km/P.heliV*60;
+  const heli = flug + P.heliO;
+  return {km, road, rtw, heli, flug};
+}
+const bestT = c=> HELI? Math.min(c.rtw,c.heli) : c.rtw;
+const badge = h=> h.sht?`<span class="badge tsht">🧠 SHT-Versorger</span>`:h.shtP?`<span class="badge tshtp">SHT eventuell</span>`:h.big?`<span class="badge tbig">🏥 Größeres Haus</span>`:"";
+function navLinks(h){
+  const dest = h.adr ? encodeURIComponent(h.adr) : `${h.lat},${h.lon}`;
+  const nav = POS ? `https://maps.apple.com/?saddr=${POS.lat},${POS.lon}&daddr=${dest}&dirflg=d` : `https://maps.apple.com/?q=${dest}`;
+  const gm = `https://www.google.com/maps/dir/?api=1${POS?`&origin=${POS.lat},${POS.lon}`:""}&destination=${dest}&travelmode=driving`;
+  return {nav,gm};
+}
+const tier = h=> h.sht?"tsht":(h.shtP?"tshtp":(h.big?"tbig":"tsmall"));
+const fm = m=>{m=Math.round(m); return m<60? m+"′" : Math.floor(m/60)+"h"+String(m%60).padStart(2,"0")};
+
+/* ===== Render Karte ===== */
+function card(h, extra=""){
+  const c = calc(h); const r = ROAD[h.id];
+  const zw = zoneWarn(h);
+  const best = c ? (HELI && c.heli < c.rtw ? "heli":"rtw") : "";
+  const tags = [];
+  if(h.capS!=null) tags.push(`<span class="tag cap">MANV S ${esc(h.capS)}${h.capL?` · L ${h.capL}`:""}</span>`);
+  else if(h.capE!=null) tags.push(`<span class="tag est">MANV S ~${esc(h.capE)} geschätzt${h.capL?` · L ${h.capL}`:""}</span>`);
+  if(h.shtP) tags.push(`<span class="tag shtp">SHT nicht in Vorlage – vorab klären</span>`);
+  if(h.vbE) tags.push(`<span class="tag vb">Verbr. Erw.</span>`);
+  if(h.vbK) tags.push(`<span class="tag vb">Verbr. Kinder</span>`);
+  if(h.hbo) tags.push(`<span class="tag hbo">HBO beatmet</span>`);
+  if(h.kids) tags.push(`<span class="tag kid">Kinder</span>`);
+  const {nav,gm} = navLinks(h);
+  return `<div class="card ${tier(h)}" id="c-${h.id}">
+    ${badge(h)}<div class="hname">${FLAG[h.c]||""} ${esc(h.n)} <button class="ib" data-info="${h.id}" aria-label="Details">ℹ️</button></div>
+    ${c?`<div class="times">
+      <div class="t"><div class="v">${c.km<1?"<1":c.km.toFixed(0)}</div><div class="l">km Luftlinie</div></div>
+      <div class="t ${best==="rtw"&&!zw?"best":""} ${zw?"warnbox":""}"><div class="v">🚑 ${zw?"⚠️ ":""}${fm(c.rtw)}</div><div class="l">RTW ${c.road<1?"<1":"~"+c.road.toFixed(0)} km</div></div>
+      <div class="t ${best==="heli"?"best":""} ${HELI?"":"na"}"><div class="v">🚁 ${fm(c.heli)}</div><div class="l">${HELI?`Flug ${fm(c.flug)} + ${P.heliO}′`:"Heli n. v."}</div></div>
+    </div>`:`<div class="meta" style="margin:6px 0">Standort fehlt – keine Zeiten.</div>`}
+    ${zw?`<div class="zone">⚠️ ${esc(zw)}</div>`:""}
+    ${r?`<div class="meta">🛣️ Navi-Route: ${r.km.toFixed(0)} km · ${fm(r.min)} (Normalfahrt, ohne Sondersignal)</div>`:""}
+    ${h.note?`<div class="note red" style="margin:6px 0 0">${esc(h.note)}</div>`:""}
+    <div class="tags">${tags.join("")}</div>
+    <div class="acts">
+      <a class="btn sm" href="${nav}" target="_blank">🧭 Apple Karten</a>
+      <a class="btn sm" href="${gm}" target="_blank">Google Maps</a>
+      ${h.tel?`<a class="btn sm" href="tel:${esc(h.tel.replace(/[^+\d]/g,""))}">📞 Anrufen</a>`:""}
+      ${extra}
+    </div></div>`;
+}
+function sorted(list){
+  if(!POS) return list;
+  return list.slice().sort((a,b)=>bestT(calc(a))-bestT(calc(b)));
+}
+
+/* ===== Ziele ===== */
+const FZ = [["alle","Alle"],["rtw30","🚑 ≤ 30 min"],["heli30","🚁 Flug ≤ 30 min"],["sht","SHT"],["gross","SHT + groß"],["manv","MANV-Kap."],["AT","🇦🇹 AT"],["DE","🇩🇪 DE"],["CH","🇨🇭 CH"],["kids","Kinder"]];
+function renderZiele(){
+  $("#fZiele").innerHTML = FZ.map(([k,t])=>`<button class="chip ${fZ===k?"on":""}" data-f="${k}">${t}</button>`).join("")
+    + `<button class="chip" id="roadBtn">🛣️ Straßenzeiten laden</button>`;
+  let l = H();
+  if(fZ==="rtw30") l = POS? l.filter(h=>calc(h).rtw<=30).sort((a,b)=>calc(a).rtw-calc(b).rtw) : l;
+  else if(fZ==="heli30") l = POS? l.filter(h=>calc(h).flug<=30).sort((a,b)=>calc(a).flug-calc(b).flug) : l;
+  else if(fZ==="manv") l = l.filter(h=>h.capS!=null||h.capE!=null);
+  else if(fZ==="kids") l = l.filter(h=>h.kids);
+  else if(fZ==="sht") l = l.filter(h=>h.sht||h.shtP);
+  else if(fZ==="gross") l = l.filter(h=>h.sht||h.big);
+  else if(fZ!=="alle") l = l.filter(h=>h.c===fZ);
+  $("#listZiele").innerHTML = (fZ==="rtw30"||fZ==="heli30"? l : sorted(l)).map(h=>card(h)).join("") || `<div class="meta">Keine Treffer.</div>`;
+}
+$("#fZiele").addEventListener("click",e=>{
+  if(e.target.id==="roadBtn") return loadRoad();
+  const f=e.target.dataset.f; if(!f) return; fZ=f; renderZiele();
+});
+
+/* Online-Straßenrouting (OSRM, öffentlicher Demo-Server) */
+async function loadRoad(){
+  if(!POS) return toast("Erst Standort setzen");
+  if(!navigator.onLine) return toast("Offline – nur Schätzung verfügbar");
+  const hs = H(); $("#roadInfo").textContent="Lade Straßenrouten …";
+  const coords = [[POS.lon,POS.lat],...hs.map(h=>[h.lon,h.lat])].map(c=>c[0].toFixed(5)+","+c[1].toFixed(5)).join(";");
+  const ctl = new AbortController(); const to=setTimeout(()=>ctl.abort(),12000);
+  try{
+    const r = await fetch(`https://router.project-osrm.org/table/v1/driving/${coords}?sources=0&annotations=duration,distance`,{signal:ctl.signal});
+    const j = await r.json(); if(j.code!=="Ok") throw new Error(j.code);
+    hs.forEach((h,i)=>{const d=j.durations[0][i+1], k=j.distances[0][i+1]; if(d!=null) ROAD[h.id]={min:d/60,km:k/1000}});
+    $("#roadInfo").textContent = "Straßenrouten geladen ("+new Date().toLocaleTimeString("de-AT",{hour:"2-digit",minute:"2-digit"})+", OSRM/OpenStreetMap, Normalfahrt).";
+    render();
+  }catch(e){ $("#roadInfo").textContent="Straßenrouten nicht verfügbar ("+(e.name==="AbortError"?"Timeout":e.message)+") – Schätzung bleibt."; }
+  finally{clearTimeout(to)}
+}
+
+/* ===== Spezial ===== */
+function renderSpez(){
+  document.querySelectorAll("#fSpez .chip").forEach(b=>b.classList.toggle("on",b.dataset.s===spez));
+  const S = SPEZ[spez];
+  $("#spezHead").innerHTML = S.head;
+  if(spez==="vb") document.querySelectorAll("#vbF .chip").forEach(b=>b.classList.toggle("on",b.dataset.k===vbMode));
+  $("#listSpez").innerHTML = sorted(H().filter(S.f)).map(h=>card(h)).join("");
+}
+function infoOpen(id){
+  const h=H().find(x=>x.id===id); if(!h) return;
+  const cls={"+":"p","-":"n","~":"w"};
+  const fa=h.fa?`<ul class="fa">${h.fa.map(t=>`<li class="${cls[t[0]]||"w"}">${esc(t.slice(1))}</li>`).join("")}</ul><div class="meta" style="margin-top:6px">Quelle: ${esc(h.faq||"–")} · Stand 21.11.2026 (Nachprüfung). Kein Ersatz für Rückfrage/Anmeldung.</div>`
+                 :`<div class="note">Fächerprofil nicht recherchiert – Aufnahme telefonisch klären.</div>`;
+  $("#infoBox").innerHTML=`<button class="x" data-iclose>✕</button>${badge(h)}<div class="hname">${FLAG[h.c]||""} ${esc(h.n)}</div>
+   ${h.adr?`<div class="meta">📍 ${esc(h.adr)}</div>`:""}
+   ${h.hint?`<div class="hint">🚑 ${esc(h.hint)}</div>`:""}
+   ${h.tel?`<div class="meta">☎️ <a href="tel:${esc(h.tel.replace(/\s/g,""))}">${esc(h.tel)}</a></div>`:""}
+   <h4>Fächer &amp; Ausstattung</h4>${fa}`;
+  $("#infoSheet").classList.remove("hidden");
+}
+document.addEventListener("click",e=>{
+  const b=e.target.closest("[data-info]"); if(b){ e.stopPropagation(); infoOpen(b.dataset.info); return }
+  if(e.target.closest("[data-iclose]")||e.target.id==="infoSheet") $("#infoSheet").classList.add("hidden");
+});
+$("#fSpez").addEventListener("click",e=>{const s=e.target.dataset.s;if(s){spez=s;renderSpez()}});
+$("#spezHead").addEventListener("click",e=>{const k=e.target.dataset.k;if(k){vbMode=k;renderSpez()}});
+
+/* ===== MANV ===== */
+function capMax(v){ if(v==null) return null; if(String(v).trim().toUpperCase()==="X") return 0; const m=String(v).match(/\d+/g); return m?Math.max(...m.map(Number)):null }
+const capCls=(n,v)=>{const b=capNum(v),m=capMax(v); return b==null?"":n>m?"over":n>b?"near":""};
+function capNum(v){ if(v==null) return null; const m=String(v).match(/\d+/); return String(v).trim().toUpperCase()==="X"?0:(m?+m[0]:null) }
+function renderManv(){
+  let S=0,L=0;
+  const hs = sorted(H());
+  $("#manvList").innerHTML = hs.map(h=>{
+    const c = MANV.cnt[h.id]||{S:0,L:0}; S+=c.S; L+=c.L;
+    const cs=capNum(h.capS??h.capE), cl=h.capL??null; const x=calc(h);
+    return `<div class="mrow ${tier(h)}">
+      <div>${badge(h)}<b>${esc(h.n)}</b><div class="meta">${h.capS!=null?`Kap. S ${esc(h.capS)}${cl?` / L ${cl}`:""}`:h.capE!=null?`Kap. S ~${esc(h.capE)} (geschätzt)${cl?` / L ${cl}`:""}`:"keine Kap.-Angabe"}${x?` · 🚑${zoneWarn(h)?"⚠️":""}${fm(x.rtw)}${HELI?` 🚁${fm(x.heli)}`:""}`:""}</div></div>
+      <div class="ctr s"><button data-h="${h.id}" data-k="S" data-d="-1">−</button><span class="n ${capCls(c.S,h.capS??h.capE)}">S${c.S}</span><button data-h="${h.id}" data-k="S" data-d="1">+</button></div>
+      <div class="ctr l"><button data-h="${h.id}" data-k="L" data-d="-1">−</button><span class="n ${cl!=null&&c.L>cl?"over":""}">L${c.L}</span><button data-h="${h.id}" data-k="L" data-d="1">+</button></div>
+    </div>`}).join("");
+  const last = MANV.log.length ? (MANV.log[MANV.log.length-1].ts||0) : null;
+  const ob=$("#manvOld");
+  if(last!==null && Date.now()-last > 6*3600e3){
+    ob.classList.remove("hidden");
+    ob.innerHTML = `⚠️ Daten von ${last?new Date(last).toLocaleString("de-AT",{day:"2-digit",month:"2-digit",hour:"2-digit",minute:"2-digit"}):"einem früheren Einsatz"} – neuer Einsatz?<button id="manvNew">Neu starten</button>`;
+    $("#manvNew").onclick=()=>{MANV={cnt:{},log:[]};LS.set("manv",MANV);renderManv();toast("MANV zurückgesetzt")};
+  } else ob.classList.add("hidden");
+  $("#sumS").textContent=S;$("#sumL").textContent=L;$("#sumT").textContent=S+L;
+  $("#manvLog").textContent = MANV.log.length? MANV.log.map(e=>`${e.t}  ${e.d>0?"+":"−"}${e.k}  ${e.a}  (∑ ${e.k}${e.n})`).join("\n") : "–";
+  const lg=$("#manvLog"); lg.scrollTop=lg.scrollHeight;
+}
+$("#manvList").addEventListener("click",e=>{
+  const b=e.target.closest("button[data-h]"); if(!b) return;
+  const id=b.dataset.h,k=b.dataset.k,d=+b.dataset.d; const c=MANV.cnt[id]||(MANV.cnt[id]={S:0,L:0});
+  if(c[k]+d<0) return; c[k]+=d;
+  const h=H().find(x=>x.id===id);
+  MANV.log.push({t:new Date().toLocaleTimeString("de-AT",{hour:"2-digit",minute:"2-digit"}),ts:Date.now(),id,k,d,a:h.n,n:c[k]});
+  LS.set("manv",MANV); renderManv();
+  const cv=k==="S"?(h.capS??h.capE):h.capL, st=capCls(c[k],cv);
+  if(d>0&&st==="over") toast(`⚠️ ${h.n}: Kapazität ${k} überschritten`);
+  else if(d>0&&st==="near") toast(`⚠️ ${h.n}: über Grundkapazität – bis ${capMax(cv)} laut Vorlage`);
+});
+$("#undoLog").onclick=()=>{const e=MANV.log.pop(); if(!e) return; MANV.cnt[e.id][e.k]-=e.d; LS.set("manv",MANV); renderManv(); toast("Rückgängig")};
+$("#resetManv").onclick=e=>{const b=e.currentTarget;
+  if(!b._arm){b._arm=1;b.textContent="Sicher? Nochmal tippen";clearTimeout(b._t);b._t=setTimeout(()=>{b._arm=0;b.textContent="Reset"},3000);return}
+  b._arm=0;b.textContent="Reset";MANV={cnt:{},log:[]};LS.set("manv",MANV);renderManv();toast("MANV zurückgesetzt")};
+$("#shareLog").onclick=async()=>{
+  const lines=H().filter(h=>MANV.cnt[h.id]&&(MANV.cnt[h.id].S||MANV.cnt[h.id].L)).map(h=>`${h.n}: S${MANV.cnt[h.id].S} L${MANV.cnt[h.id].L}`);
+  const txt=`MANV-Verteilung ${new Date().toLocaleString("de-AT")}${POS?`\nEinsatzort: ${POS.name}`:""}\n\n${lines.join("\n")}\n\nTimeline:\n${$("#manvLog").textContent}`;
+  try{ if(navigator.share){await navigator.share({text:txt});return} await navigator.clipboard.writeText(txt); toast("Kopiert") }catch(e){}
+};
+
+/* ===== Standort ===== */
+function setPos(p){ POS=Object.assign(p,{ts:Date.now()}); LS.set("pos",POS); ROAD={}; $("#roadInfo").textContent=""; if(p.src!=="Karte") MAP.init=false; render() }
+function renderLoc(){
+  if(!POS){$("#locName").textContent="Kein Standort";$("#locSub").textContent="GPS, Ort oder Karte";$("#ortBtnTxt").textContent="Ort suchen …";$("#staleBox").classList.add("hidden");$("#locDot").className="dot";return}
+  $("#locName").textContent=POS.name;
+  $("#ortBtnTxt").textContent = POS.src==="Ortsmitte" ? POS.name : "Ort suchen …";
+  const age=Math.round((Date.now()-POS.ts)/60000);
+  const ageTxt = age<60? `${age} min` : (age<1440? `${Math.floor(age/60)} h ${age%60} min` : `${Math.floor(age/1440)} Tag(en)`);
+  $("#locSub").textContent=`${POS.lat.toFixed(4)}, ${POS.lon.toFixed(4)} · ${POS.src}${POS.acc?` ±${Math.round(POS.acc)} m`:""} · vor ${ageTxt}`;
+  const sb=$("#staleBox");
+  $("#locDot").className="dot "+(age>30?"bad":"ok");
+  if(age>30){ sb.classList.remove("hidden");
+    sb.innerHTML=`⚠️ Standort ${ageTxt} alt – Zeiten evtl. falsch<button id="staleGps">GPS neu</button>`;
+    $("#staleGps").onclick=()=>$("#gpsBtn").click();
+  } else sb.classList.add("hidden");
+}
+$("#gpsBtn").onclick=()=>{
+  if(!navigator.geolocation) return toast("GPS nicht verfügbar");
+  toast("Suche GPS …");
+  navigator.geolocation.getCurrentPosition(p=>{
+    const {latitude:lat,longitude:lon,accuracy:acc}=p.coords;
+    let near=ORTE.map(o=>[o[0],hav(lat,lon,o[1],o[2])]).sort((a,b)=>a[1]-b[1])[0];
+    setPos({lat,lon,acc,src:"GPS",name: near[1]<=12 ? `GPS – nahe ${near[0]} (${near[1].toFixed(1)} km)` : "GPS-Position"});
+  },err=>toast("GPS-Fehler: "+(err.code===1?"Zugriff verweigert (Einstellungen › Datenschutz › Ortungsdienste)":err.message)),
+  {enableHighAccuracy:true,timeout:15000,maximumAge:30000});
+};
+/* ===== Ortssuche ===== */
+const norm=t=>t.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g,"").replace(/ß/g,"ss").replace(/sankt\s*/g,"st. ").replace(/[^a-z0-9. ]/g," ").replace(/\s+/g," ").trim();
+const ORTN=ORTE.map(o=>norm(o[0]+" "+o[3]));
+let RECENT=LS.get("recent",[]);
+function ortOpen(){ $("#ortSheet").classList.remove("hidden"); $("#ortQ").value=""; ortRender(); setTimeout(()=>$("#ortQ").focus(),50) }
+function ortClose(){ $("#ortSheet").classList.add("hidden"); $("#ortQ").blur() }
+function hl(name,q){ if(!q) return esc(name); const n=norm(name), i=n.indexOf(q); return i<0||n.length!==name.length? esc(name) : esc(name.slice(0,i))+"<mark>"+esc(name.slice(i,i+q.length))+"</mark>"+esc(name.slice(i+q.length)) }
+function ortRow(i,q){ const o=ORTE[i]; const km=POS?hav(POS.lat,POS.lon,o[1],o[2]):null;
+  return `<button class="orow" data-oi="${i}"><span><b>${hl(o[0],q)}</b><small>${esc(o[3])}</small></span>${km!=null?`<span class="km">${km<10?km.toFixed(1):km.toFixed(0)} km</span>`:""}</button>` }
+function ortRender(){
+  const q=norm($("#ortQ").value); let h="";
+  if(!q){
+    const rec=RECENT.map(n=>ORTE.findIndex(o=>o[0]===n)).filter(i=>i>=0);
+    if(rec.length) h+=`<h4>ZULETZT</h4>`+rec.map(i=>ortRow(i,"")).join("");
+    if(POS){ const nn=ORTE.map((o,i)=>[i,hav(POS.lat,POS.lon,o[1],o[2])]).sort((x,y)=>x[1]-y[1]).slice(0,6);
+      h+=`<h4>IN DER NÄHE DES AKTUELLEN STANDORTS</h4>`+nn.map(x=>ortRow(x[0],"")).join("") }
+    const groups=[...new Set(ORTE.map(o=>o[3].split(" · ")[0]))];
+    const order=["Bez. Bregenz","Bez. Dornbirn","Bez. Feldkirch","Bez. Bludenz","Ortsteil","Pass","Tirol","Liechtenstein","Schweiz","Deutschland"];
+    groups.sort((a,b)=>order.indexOf(a)-order.indexOf(b));
+    for(const g of groups){ const ids=ORTE.map((o,i)=>i).filter(i=>ORTE[i][3].split(" · ")[0]===g).sort((a,b)=>ORTE[a][0].localeCompare(ORTE[b][0],"de"));
+      h+=`<h4>${esc(g==="Ortsteil"?"ORTSTEILE / SKIGEBIETE":g==="Pass"?"PÄSSE":g.toUpperCase())} (${ids.length})</h4>`+ids.map(i=>ortRow(i,"")).join("") }
+  } else {
+    const hits=ORTE.map((o,i)=>{const n=norm(o[0]), full=ORTN[i]; const sc=n.startsWith(q)?0:n.split(" ").some(w=>w.startsWith(q))?1:full.includes(q)?2:-1; return [i,sc]})
+      .filter(x=>x[1]>=0).sort((a,b)=>a[1]-b[1]||ORTE[a[0]][0].localeCompare(ORTE[b[0]][0],"de"));
+    h = hits.length? hits.map(x=>ortRow(x[0],q)).join("") : `<div class="oempty">Kein Ort gefunden. Tipp: Einsatzort im Reiter <b>Karte</b> antippen oder Koordinaten über ⌖ eingeben.</div>`;
+  }
+  $("#ortList").innerHTML=h; $("#ortList").scrollTop=0;
+}
+function ortPick(i){ const o=ORTE[i];
+  RECENT=[o[0],...RECENT.filter(n=>n!==o[0])].slice(0,5); LS.set("recent",RECENT);
+  setPos({lat:o[1],lon:o[2],src:"Ortsmitte",name:o[0]}); ortClose(); toast(`Einsatzort: ${o[0]}`) }
+$("#ortBtn").onclick=ortOpen; $("#ortClose").onclick=ortClose;
+$("#ortQ").addEventListener("input",ortRender);
+$("#ortQ").addEventListener("keydown",e=>{ if(e.key==="Enter"){const b=$("#ortList .orow"); if(b) ortPick(+b.dataset.oi)} if(e.key==="Escape") ortClose() });
+$("#ortList").addEventListener("click",e=>{const b=e.target.closest("[data-oi]"); if(b) ortPick(+b.dataset.oi)});
+$("#coordBtn").onclick=()=>{const r=$("#coordRow");r.classList.toggle("hidden");
+  if(!r.classList.contains("hidden")){ if(POS) $("#coordIn").value=`${POS.lat.toFixed(5)}, ${POS.lon.toFixed(5)}`; $("#coordIn").focus() }};
+$("#coordOk").onclick=()=>{
+  const v=$("#coordIn").value; if(!v) return; const m=v.replace(/;/g,",").split(",").map(s=>parseFloat(s.trim()));
+  if(m.length<2||isNaN(m[0])||isNaN(m[1])||Math.abs(m[0])>90||Math.abs(m[1])>180) return toast("Ungültige Koordinaten");
+  setPos({lat:m[0],lon:m[1],src:"manuell",name:"Manuelle Koordinate"}); $("#coordRow").classList.add("hidden");
+};
+
+/* ===== Heli verfügbar ===== */
+function renderHeli(){const b=$("#heliBtn"); b.textContent=HELI?"🚁 an":"🚁 aus"; b.classList.toggle("off",!HELI)}
+$("#heliBtn").onclick=()=>{HELI=!HELI; LS.set("heli",HELI); renderHeli(); render(); toast(HELI?"Heli verfügbar – Sortierung inkl. Heli":"Heli nicht verfügbar – Sortierung nur RTW")};
+
+/* ===== Einstellungen / Editor ===== */
+const PF={pRtwV:"rtwV",pRtwF:"rtwF",pHeliV:"heliV",pHeliO:"heliO"};
+function renderParams(){for(const [el,k] of Object.entries(PF)) $("#"+el).value=P[k]}
+for(const [el,k] of Object.entries(PF)) $("#"+el).addEventListener("change",e=>{const v=parseFloat(e.target.value); if(v>0){P[k]=v;LS.set("p",P);render()}});
+$("#pReset").onclick=()=>{P=Object.assign({},DEF_P);LS.set("p",P);renderParams();render();toast("Standard gesetzt")};
+$("#editSel").innerHTML=DEF_H.slice().sort((a,b)=>a.n.localeCompare(b.n,"de")).map(h=>`<option value="${h.id}">${h.n}</option>`).join("");
+function renderEdit(){
+  const id=$("#editSel").value, h=H().find(x=>x.id===id);
+  $("#editBox").innerHTML=`<div class="meta">${esc(h.n)}</div>
+   <div class="grid2"><div><label class="f">Breite</label><input id="eLat" inputmode="decimal" value="${h.lat}"></div>
+   <div><label class="f">Länge</label><input id="eLon" inputmode="decimal" value="${h.lon}"></div></div>
+   <div class="grid2"><div><label class="f">Kap. S ${h.capS==null&&h.capE!=null?`(Schätzung ~${esc(h.capE)})`:""}</label><input id="eCapS" value="${esc(h.capS??"")}"></div>
+   <div><label class="f">Kap. L</label><input id="eCapL" inputmode="numeric" value="${esc(h.capL??"")}"></div></div>
+   <label class="f">Telefon (Schockraum / Aufnahme)</label><input id="eTel" type="tel" value="${esc(h.tel||"")}">
+   <label class="f">Notiz (z. B. Landeplatz)</label><input id="eNote" value="${esc(h.note||"")}">
+   <div class="meta" style="margin-top:6px">Adresse (geprüft): ${esc(h.adr||"–")}</div>
+   <div class="acts"><a class="btn sm" target="_blank" href="https://maps.apple.com/?ll=${h.lat},${h.lon}&q=${encodeURIComponent(h.n)}">📍 Hinterlegten Punkt zeigen</a>${h.adr?`<a class="btn sm" target="_blank" href="https://maps.apple.com/?q=${encodeURIComponent(h.adr)}">🏠 Adresse zeigen</a>`:""}</div>
+   <div class="meta">Liegen Punkt und Adresse auseinander: in Apple Karten lange auf die Klinik drücken, Koordinaten kopieren und oben eintragen.</div>
+   <div class="acts"><button class="btn pri sm" id="eSave">Speichern</button><button class="btn sm" id="eDef">Original</button></div>`;
+  $("#eSave").onclick=()=>{const lat=parseFloat($("#eLat").value),lon=parseFloat($("#eLon").value);
+    if(isNaN(lat)||isNaN(lon)) return toast("Koordinaten ungültig");
+    const cS=$("#eCapS").value.trim(), cL=$("#eCapL").value.trim();
+    const d0=DEF_H.find(x=>x.id===id); OVR[id]={tel:$("#eTel").value.trim(),note:$("#eNote").value.trim()};
+    if(Math.abs(lat-d0.lat)>1e-6||Math.abs(lon-d0.lon)>1e-6){OVR[id].lat=lat;OVR[id].lon=lon}
+    if(!OVR[id].note&&d0.note) OVR[id].note=d0.note;
+    if(cS&&cS!==String(d0.capS??"")) OVR[id].capS=cS; else if(!cS&&d0.capS!=null) OVR[id].capS=null;
+    if(cL&&!isNaN(+cL)&&+cL!==d0.capL) OVR[id].capL=+cL; else if(!cL&&d0.capL!=null) OVR[id].capL=null;
+    if(!OVR[id].tel) delete OVR[id].tel; if(!OVR[id].note) delete OVR[id].note; if(!Object.keys(OVR[id]).length) delete OVR[id];
+    LS.set("ovr",OVR); render(); toast("Gespeichert")};
+  $("#eDef").onclick=()=>{delete OVR[id];LS.set("ovr",OVR);renderEdit();render();toast("Zurückgesetzt")};
+}
+$("#editSel").onchange=renderEdit;
+$("#exportCfg").onclick=async()=>{const t=JSON.stringify({p:P,ovr:OVR}); const ta=$("#cfgTxt"); ta.classList.remove("hidden"); ta.value=t; ta.select();
+  try{ if(navigator.share) await navigator.share({text:t}); else {await navigator.clipboard.writeText(t);toast("In Zwischenablage")} }catch(e){toast("Text markiert – manuell kopieren")}};
+$("#importCfg").onclick=()=>{const ta=$("#cfgTxt"); if(ta.classList.contains("hidden")||!ta.value.trim()){ta.classList.remove("hidden");ta.value="";ta.focus();return}
+  const t=ta.value.trim();
+  try{const j=JSON.parse(t); if(j.p)P=Object.assign({},DEF_P,j.p); if(j.ovr)OVR=j.ovr; LS.set("p",P);LS.set("ovr",OVR); renderParams();renderEdit();render();toast("Importiert")}catch(e){toast("Ungültige Daten")}; ta.classList.add("hidden")};
+
+
+/* ===== Header-Höhe (für Karte / Scroll-Offset) ===== */
+{const hdr=document.querySelector("header"); const setH=()=>document.documentElement.style.setProperty("--hh",hdr.offsetHeight+"px");
+ setH(); if(window.ResizeObserver) new ResizeObserver(setH).observe(hdr); window.addEventListener("resize",setH);}
+
+/* ===== Schnellwahl ===== */
+const shortName = h=>h.n.split(",").slice(1).join(",").trim() || h.n;
+function renderQuick(){
+  const el=$("#quick"); if(!POS){el.innerHTML="";return}
+  const hs=H(); const pick=f=>sorted(hs.filter(f))[0];
+  const items=[["Nächste Klinik",pick(()=>true)],["Nächstes SHT-Haus",pick(h=>h.sht)],["Nächstes großes / SHT",pick(h=>h.sht||h.big)]];
+  el.innerHTML=`<div class="quick">${items.filter(x=>x[1]).map(([t,h])=>{const c=calc(h),z=zoneWarn(h),hb=HELI&&c.heli<c.rtw;
+    return `<button class="q ${tier(h)}" data-go="${h.id}"><small>${t}</small><b>${esc(shortName(h))}</b><span>${hb?"🚁 "+fm(c.heli):"🚑 "+(z?"⚠️":"")+fm(c.rtw)}</span></button>`}).join("")}</div>`;
+}
+$("#quick").addEventListener("click",e=>{const b=e.target.closest("[data-go]"); if(!b) return;
+  if(fZ!=="alle"){fZ="alle";renderZiele()}
+  const c=document.getElementById("c-"+b.dataset.go); if(c){c.scrollIntoView({behavior:"smooth",block:"start"}); c.classList.remove("flash"); void c.offsetWidth; c.classList.add("flash")}});
+
+/* ===== Karte (eigene Kachelkarte, OpenStreetMap) ===== */
+const MAP={z:9,lat:47.25,lon:9.85,tiles:new Map(),fil:"alle",sel:null,ok:0,err:0,init:false,raf:0};
+const TS=256;
+const lon2x=(lon,z)=>(lon+180)/360*TS*2**z;
+const lat2y=(lat,z)=>{const s=Math.sin(lat*Math.PI/180);return (0.5-Math.log((1+s)/(1-s))/(4*Math.PI))*TS*2**z};
+const x2lon=(x,z)=>x/(TS*2**z)*360-180;
+const y2lat=(y,z)=>{const n=Math.PI-2*Math.PI*y/(TS*2**z);return 180/Math.PI*Math.atan(Math.sinh(n))};
+const MF=[["alle","Alle"],["sht","SHT"],["gross","SHT + groß"],["vb","Verbrennung"],["hbo","HBO"],["kids","Kinder"]];
+function mapList(){const hs=H(); const f=MAP.fil;
+  return f==="sht"?hs.filter(h=>h.sht||h.shtP):f==="gross"?hs.filter(h=>h.sht||h.shtP||h.big):f==="vb"?hs.filter(h=>h.vbE||h.vbK):f==="hbo"?hs.filter(h=>h.hbo):f==="kids"?hs.filter(h=>h.kids):hs}
+function mapMarks(){
+  $("#fMap").innerHTML=MF.map(([k,t])=>`<button class="chip ${MAP.fil===k?"on":""}" data-mf="${k}">${t}</button>`).join("");
+  $("#marks").innerHTML=mapList().map(h=>`<div class="mk ${tier(h)} ${MAP.sel===h.id?"sel":""}" data-id="${h.id}"><i></i><span>${esc(h.a.includes("/")?h.a.split("/").pop().trim():h.a)}</span></div>`).join("")+(POS?`<div class="eo" id="eoMk"></div>`:"");
+  mapDraw();
+}
+function mapDraw(){ cancelAnimationFrame(MAP.raf); MAP.raf=requestAnimationFrame(mapRender) }
+function mapRender(){
+  const el=$("#map"), W=el.clientWidth, Hh=el.clientHeight; if(!W||!Hh) return;
+  const z=MAP.z, cx=lon2x(MAP.lon,z), cy=lat2y(MAP.lat,z);
+  const tz=Math.max(3,Math.min(17,Math.round(z))), ts=TS*2**(z-tz), n=2**tz;
+  const x0=Math.floor((cx-W/2)/ts), x1=Math.floor((cx+W/2)/ts), y0=Math.floor((cy-Hh/2)/ts), y1=Math.floor((cy+Hh/2)/ts);
+  const want=new Set(), layer=$("#tiles");
+  for(let ty=Math.max(0,y0);ty<=Math.min(n-1,y1);ty++) for(let tx=x0;tx<=x1;tx++){
+    const wx=((tx%n)+n)%n, key=`${tz}/${wx}/${ty}`; want.add(key);
+    let img=MAP.tiles.get(key);
+    if(!img){ img=new Image(); img.className="tile"; img.alt=""; img.draggable=false;
+      img.onload=()=>{img.style.opacity=1; MAP.ok++; $("#mNote").classList.add("hidden")};
+      img.onerror=()=>{img.style.display="none"; MAP.err++; if(!MAP.ok) $("#mNote").classList.remove("hidden")};
+      img.src=`https://tile.openstreetmap.org/${key}.png`; MAP.tiles.set(key,img); layer.appendChild(img); }
+    img.style.width=img.style.height=(ts+0.6)+"px";
+    img.style.transform=`translate(${tx*ts-cx+W/2}px,${ty*ts-cy+Hh/2}px)`;
+  }
+  for(const [k,img] of MAP.tiles) if(!want.has(k)){ img.remove(); MAP.tiles.delete(k) }
+  const showLbl=z>=8.3;
+  document.querySelectorAll("#marks .mk").forEach(m=>{const h=DEF_H.find(x=>x.id===m.dataset.id), o=OVR[h.id]||{}, lat=o.lat??h.lat, lon=o.lon??h.lon;
+    m.style.transform=`translate(${lon2x(lon,z)-cx+W/2}px,${lat2y(lat,z)-cy+Hh/2}px) translate(calc(-1*var(--r,8px)),-50%)`;
+    m.classList.toggle("nolbl",!showLbl&&MAP.sel!==h.id)});
+  const eo=$("#eoMk"); if(eo&&POS) eo.style.transform=`translate(${lon2x(POS.lon,z)-cx+W/2}px,${lat2y(POS.lat,z)-cy+Hh/2}px)`;
+}
+function mapZoomAt(nz,px,py){
+  const el=$("#map"), W=el.clientWidth, Hh=el.clientHeight; nz=Math.max(4,Math.min(17,nz));
+  const z=MAP.z, wx=lon2x(MAP.lon,z)+(px-W/2), wy=lat2y(MAP.lat,z)+(py-Hh/2), lon=x2lon(wx,z), lat=y2lat(wy,z);
+  MAP.lon=x2lon(lon2x(lon,nz)-(px-W/2),nz); MAP.lat=y2lat(lat2y(lat,nz)-(py-Hh/2),nz); MAP.z=nz; mapDraw();
+}
+function mapPan(dx,dy){const z=MAP.z; MAP.lon=x2lon(lon2x(MAP.lon,z)-dx,z); MAP.lat=Math.max(-85,Math.min(85,y2lat(lat2y(MAP.lat,z)-dy,z))); mapDraw()}
+function mapFit(pts){
+  const el=$("#map"), W=el.clientWidth, Hh=el.clientHeight; if(!pts.length||!W) return;
+  const la=pts.map(p=>p[0]), lo=pts.map(p=>p[1]);
+  const mnA=Math.min(...la),mxA=Math.max(...la),mnO=Math.min(...lo),mxO=Math.max(...lo);
+  const L=40,Rr=110,T=100,B=60; // Ränder: Labels, Knöpfe rechts, Filter oben
+  const sx=lon2x(mxO,0)-lon2x(mnO,0)||1e-6, sy=lat2y(mnA,0)-lat2y(mxA,0)||1e-6;
+  const z=Math.max(5,Math.min(12.5,Math.log2(Math.min((W-L-Rr)/sx,(Hh-T-B)/sy))));
+  const mx=(lon2x(mnO,z)+lon2x(mxO,z))/2+(Rr-L)/2, my=(lat2y(mnA,z)+lat2y(mxA,z))/2+(B-T)/2;
+  MAP.z=z; MAP.lon=x2lon(mx,z); MAP.lat=y2lat(my,z); mapDraw();
+}
+function mapFitDefault(){
+  if(POS){const near=H().map(h=>[h,hav(POS.lat,POS.lon,h.lat,h.lon)]).sort((a,b)=>a[1]-b[1]).slice(0,6).map(x=>[x[0].lat,x[0].lon]);
+    mapFit([[POS.lat,POS.lon],...near])}
+  else mapFit([[46.85,9.3],[47.75,10.35]]);
+}
+function mapSheetH(id){
+  const h=H().find(x=>x.id===id), c=calc(h), zw=zoneWarn(h);
+  const {nav,gm}=navLinks(h);
+  const cap=h.capS!=null?`MANV S ${esc(h.capS)}${h.capL?` · L ${h.capL}`:""}`:h.capE!=null?`MANV S ~${esc(h.capE)} geschätzt`:"";
+  $("#mSheet").innerHTML=`<button class="x" data-close>✕</button>
+   ${badge(h)}<div class="hname">${FLAG[h.c]||""} ${esc(h.n)}</div>${cap?`<div class="meta">${cap}</div>`:""}
+   ${c?`<div class="times"><div class="t"><div class="v">${c.km<1?"<1":c.km.toFixed(0)}</div><div class="l">km Luftlinie</div></div>
+     <div class="t ${zw?"warnbox":""} ${!HELI||c.rtw<=c.heli?(zw?"":"best"):""}"><div class="v">🚑 ${zw?"⚠️":""}${fm(c.rtw)}</div><div class="l">RTW</div></div>
+     <div class="t ${HELI&&c.heli<c.rtw?"best":""} ${HELI?"":"na"}"><div class="v">🚁 ${fm(c.heli)}</div><div class="l">${HELI?"Heli":"Heli n. v."}</div></div></div>`:`<div class="meta" style="margin:6px 0">Einsatzort fehlt – tippe auf die Karte, um ihn zu setzen.</div>`}
+   ${h.adr?`<div class="meta">📍 ${esc(h.adr)}</div>`:""}<button class="btn sm" data-info="${h.id}" style="margin:6px 0">ℹ️ Fächer &amp; Ausstattung</button>${zw?`<div class="zone">⚠️ ${esc(zw)}</div>`:""}${h.hint?`<div class="hint">ℹ️ ${esc(h.hint)}</div>`:""}${h.note?`<div class="zone">${esc(h.note)}</div>`:""}
+   <div class="acts"><a class="btn sm" href="${nav}" target="_blank">🧭 Apple Karten</a><a class="btn sm" href="${gm}" target="_blank">Google Maps</a>
+   ${h.tel?`<a class="btn sm" href="tel:${esc(h.tel.replace(/[^+\d]/g,""))}">📞 Anrufen</a>`:""}</div>`;
+  $("#mSheet").classList.remove("hidden");
+}
+function mapSheetEO(lat,lon){
+  $("#mSheet").innerHTML=`<button class="x" data-close>✕</button><div class="hname">📍 Hier Einsatzort setzen?</div>
+   <div class="meta">${lat.toFixed(5)}, ${lon.toFixed(5)}</div>
+   <div class="acts"><button class="btn pri" data-seteo="${lat},${lon}">Einsatzort setzen</button><button class="btn" data-close>Abbrechen</button></div>`;
+  $("#mSheet").classList.remove("hidden");
+}
+$("#mSheet").addEventListener("click",e=>{
+  if(e.target.closest("[data-close]")){$("#mSheet").classList.add("hidden"); MAP.sel=null; mapMarks(); return}
+  const s=e.target.closest("[data-seteo]"); if(s){const [la,lo]=s.dataset.seteo.split(",").map(Number);
+    setPos({lat:la,lon:lo,src:"Karte",name:"Einsatzort (Karte)"}); $("#mSheet").classList.add("hidden"); toast("Einsatzort gesetzt")}
+});
+$("#fMap").addEventListener("click",e=>{const k=e.target.dataset.mf; if(!k) return; MAP.fil=k; mapMarks();
+  const l=mapList(); if(!l.length) return;
+  if(POS){const near=l.map(h=>[h,hav(POS.lat,POS.lon,h.lat,h.lon)]).sort((a,b)=>a[1]-b[1]).slice(0,5).map(x=>[x[0].lat,x[0].lon]); mapFit([[POS.lat,POS.lon],...near])}
+  else mapFit(l.map(h=>[h.lat,h.lon]))});
+$("#mNote").addEventListener("click",()=>$("#mNote").classList.add("hidden"));
+$("#mZin").onclick=()=>{const m=$("#map"); mapZoomAt(MAP.z+1,m.clientWidth/2,m.clientHeight/2)};
+$("#mZout").onclick=()=>{const m=$("#map"); mapZoomAt(MAP.z-1,m.clientWidth/2,m.clientHeight/2)};
+$("#mEo").onclick=()=>{ if(!POS) return toast("Kein Einsatzort gesetzt"); MAP.lat=POS.lat; MAP.lon=POS.lon; if(MAP.z<11) MAP.z=11; mapDraw() };
+$("#mFit").onclick=()=>{const l=mapList(); mapFit([...(POS?[[POS.lat,POS.lon]]:[]),...l.map(h=>[h.lat,h.lon])])};
+{ // Gesten: 1 Finger verschieben, 2 Finger zoomen, Tippen = Auswahl
+  const m=$("#map"), P=new Map(); let g=null;
+  const isCtl=t=>t.closest(".mctl,.mfil,.sheet,.attr");
+  const rel=e=>{const r=m.getBoundingClientRect();return [e.clientX-r.left,e.clientY-r.top]};
+  m.addEventListener("pointerdown",e=>{ if(isCtl(e.target)) return;
+    m.setPointerCapture(e.pointerId); P.set(e.pointerId,rel(e));
+    if(P.size===1) g={t0:Date.now(),start:rel(e),moved:0,tgt:e.target.closest(".mk")}; else if(g) g.moved=99; });
+  m.addEventListener("pointermove",e=>{ if(!P.has(e.pointerId)) return; const now=rel(e), prev=P.get(e.pointerId);
+    if(P.size===1){ mapPan(now[0]-prev[0],now[1]-prev[1]); if(g) g.moved=Math.max(g.moved,Math.hypot(now[0]-g.start[0],now[1]-g.start[1])); }
+    else if(P.size===2){ const [a,b]=[...P.entries()].map(([id,p])=>id===e.pointerId?now:p), [a0,b0]=[...P.values()];
+      const d0=Math.hypot(a0[0]-b0[0],a0[1]-b0[1]), d1=Math.hypot(a[0]-b[0],a[1]-b[1]);
+      const mx0=(a0[0]+b0[0])/2,my0=(a0[1]+b0[1])/2,mx=(a[0]+b[0])/2,my=(a[1]+b[1])/2;
+      if(d0>10){ mapPan(mx-mx0,my-my0); mapZoomAt(MAP.z+Math.log2(d1/d0),mx,my) } }
+    P.set(e.pointerId,now); });
+  const up=e=>{ if(!P.has(e.pointerId)) return; P.delete(e.pointerId);
+    if(P.size===0&&g&&g.moved<8&&Date.now()-g.t0<500){
+      if(g.tgt){ MAP.sel=g.tgt.dataset.id; mapMarks(); mapSheetH(MAP.sel) }
+      else { const [px,py]=g.start, W=m.clientWidth, Hh=m.clientHeight;
+        mapSheetEO(y2lat(lat2y(MAP.lat,MAP.z)+py-Hh/2,MAP.z), x2lon(lon2x(MAP.lon,MAP.z)+px-W/2,MAP.z)) } }
+    if(P.size===0) g=null; };
+  m.addEventListener("pointerup",up); m.addEventListener("pointercancel",up);
+  m.addEventListener("wheel",e=>{e.preventDefault(); const [x,y]=rel(e); mapZoomAt(MAP.z-e.deltaY*0.003,x,y)},{passive:false});
+  window.addEventListener("resize",()=>{ if(view==="karte") mapDraw() });
+}
+function renderKarte(){ if(!MAP.init){ MAP.init=true; requestAnimationFrame(()=>{mapFitDefault(); mapMarks()}) } else mapMarks() }
+
+/* ===== Navigation ===== */
+let view="ziele";
+document.querySelector(".tabs").addEventListener("click",e=>{
+  const b=e.target.closest("button"); if(!b) return; view=b.dataset.v;
+  document.querySelectorAll(".tabs button").forEach(x=>x.classList.toggle("on",x===b));
+  document.querySelectorAll("main>section").forEach(s=>s.classList.toggle("hidden",s.id!=="v-"+view));
+  document.body.classList.toggle("mapmode",view==="karte");
+  window.scrollTo(0,0); render();
+});
+function render(){ renderLoc(); if(view==="ziele"){renderQuick();renderZiele()} if(view==="spez")renderSpez(); if(view==="manv")renderManv(); if(view==="karte")renderKarte(); }
+setInterval(renderLoc,60000);
+renderParams(); renderEdit(); renderHeli(); render();
+
+if("serviceWorker" in navigator && location.protocol==="https:"){
+  navigator.serviceWorker.register("sw.js").catch(()=>{});
+}
+</script>
+</body>
+</html>
