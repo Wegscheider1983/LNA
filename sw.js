@@ -1,6 +1,6 @@
 // App: cache-first (sofortiger Start, Update im Hintergrund).
 // Kartenkacheln (OpenStreetMap): nur bereits angesehene Kacheln werden gespeichert – kein Massen-Download.
-const C="lna-v191", T="lna-tiles-v1", TMAX=1500;
+const C="lna-v1101", T="lna-tiles-v1", TMAX=1500;
 const F=["./","./index.html","./manifest.json","./icon-180.png","./icon-192.png","./icon-512.png"];
 self.addEventListener("install",e=>{e.waitUntil(caches.open(C).then(c=>c.addAll(F)));self.skipWaiting()});
 self.addEventListener("activate",e=>{e.waitUntil(caches.keys().then(k=>Promise.all(k.filter(x=>x!==C&&x!==T).map(x=>caches.delete(x)))));self.clients.claim()});
